@@ -61,13 +61,13 @@ Click on [this link](./images/architecture.jpeg) to to see the high-resolution v
 ## Docker
 Containers encapsulate application code and dependencies, ensuring consistency across development, testing, and production environments. They offer portability, scalability, and resource efficiency, making it easier to deploy and manage microservices-based architectures like NOTEFORT in both local and cloud environments.
 
+NOTEFORT is fully containerized with Docker:
+
 - Frontend: `react` container Built with React.js, providing a simple interface for data input and visualization.
 - Backend: Two Node.js containers `nodejsa` and `nodejsb` with RESTful APIs.
 - Message Broker: `rabbitmq` container facilitates communication between the microservices.
 - Database: Each backend service has its own MySQL database container instance `mysqla` and `mysqlb`.
 - Reverse Proxy: `nginx` container Acts as a reverse proxy for the frontend.
-
-NOTEFORT is fully containerized with Docker.
 
 ## Terraform (IaC)
 Infrastructure as Code (IaC) streamlines cloud infrastructure management by automating resource provisioning and configuration through code. It ensures consistency, reduces human error, and simplifies version control, making infrastructure changes auditable and repeatable. IaC enables faster deployment, scaling, and recovery while supporting collaborative development practices. 
@@ -80,7 +80,9 @@ HashiCorp Vault is a powerful tool for securely storing and accessing sensitive 
 NOTEFORT utilizes HashiCorp Vault to securely manage and inject secrets into its Kubernetes environment.
 
 ## Kubernetes
-Kubernetes deployment offers scalable, automated, and resilient container orchestration for modern applications. It efficiently manages containerized workloads, automates resource allocation, and ensures high availability through self-healing mechanisms. With features like rolling updates, service discovery, and load balancing, Kubernetes simplifies application deployment and scaling. Additionally, its portability and integration with cloud-native environments make it ideal for managing complex, distributed applications across various cloud  environments.
+Kubernetes deployment offers scalable, automated, and resilient container orchestration for modern applications. It efficiently manages containerized workloads, automates resource allocation, and ensures high availability through self-healing mechanisms. 
+
+With features like rolling updates, service discovery, and load balancing, Kubernetes simplifies application deployment and scaling. Additionally, its portability and integration with cloud-native environments make it ideal for managing complex, distributed applications across various cloud  environments.
 
 NOTEFORT application is deployed in a Kubernetes cluster.
 
@@ -93,6 +95,11 @@ NOTEFORT uses the Kubernetes Cluster Autoscaler.
 Vertical Pod Autoscaler (VPA) and Horizontal Pod Autoscaler (HPA) work together to optimize pod resource allocation and scaling. HPA adjusts the number of pod replicas based on CPU or memory utilization, ensuring optimal load distribution and availability. VPA, on the other hand, dynamically adjusts the resource requests and limits of individual pods based on usage, improving resource efficiency. 
 
 NOTEFORT leverages both HPA and VPA.
+
+## Helm
+Helm is a package manager for Kubernetes that simplifies the deployment and management of applications by using Helm charts. It helps with versioning, rollbacks, and dependency management, making it easier to maintain and update applications in a Kubernetes cluster.
+
+NOTEFORT uses Helm Charts.
 
 ## Prometheus & Grafana
 Prometheus is an open-source monitoring and alerting toolkit designed for reliability and scalability. It collects and stores metrics in a time-series database, allowing for real-time monitoring of applications and infrastructure. Grafana is an open-source visualization and analytics platform that integrates with Prometheus to display the collected metrics in customizable, interactive dashboards. 
@@ -139,8 +146,10 @@ Forking does not copy Github Actions Secrets. Create the following Github Action
 Ensure these Secrets are created before running the Github Actions Workflow.
 
 ## GitHub Workflows
-### Create ECR Registries & Build Tag and Push Images
-To create the AWS ECR registries, build and tag (commit hash) and push the images of the application to AWS ECR, run the workflow `Artifacts - Build`.
+### Build Artifacts & Create ECR Registries
+To create ECR registries, build and tag (commit hash) and push the images, run the workflow `Artifacts - Build`.
+
+**Note**: For simplicity, this workflow builds (same tag) all images in a single process. In a typical development setup, each image should be built (different tags) separately with its own workflow.
 
 ### Prepare Backend for Terraform 
 To provision the terraform S3 bucket and the DynamoDB Table, run the GitHub Actions workflow `Backend - Create`.
