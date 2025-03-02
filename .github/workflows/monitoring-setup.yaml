@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - './github/workflows/monitoring-setup.yaml'
+      - '.github/workflows/monitoring-setup.yaml'
 
 permissions:
   id-token: write

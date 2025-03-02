@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - './github/workflows/eks-map.yaml'
+      - '.github/workflows/eks-map.yaml'
 
 permissions:
   id-token: write  
