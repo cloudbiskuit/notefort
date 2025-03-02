@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: react  
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: react
+  template:
+    metadata:
+      labels:
+        app: react
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: private
+                operator: In
+                values:
+                - "true"
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - react
+            topologyKey: "kubernetes.io/hostname"
+      containers:
+      - name: react
+        image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/notefort-react:${IMAGE_TAG}
+        ports:
+        - containerPort: 3000
+
+        resources:
+          requests:
+            cpu: "100m"      # 0.1 vCPU, React app doesn't need a lot of CPU
+            memory: "128Mi"  # 128MB RAM, React app usually stays small
+          limits:
+            cpu: "200m"      # 0.2 vCPU, enough for handling multiple concurrent users
+            memory: "256Mi"  # 256MB RAM, to handle any minor load spikes
+
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: react
+spec:
+  selector:
+    app: react
+  ports:
+  - protocol: TCP
+    port: 3000
+    targetPort: 3000
+  type: ClusterIP

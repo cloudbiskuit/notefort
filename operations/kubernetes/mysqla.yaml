@@ -1,0 +1,110 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysqla
+spec:
+  serviceName: mysqla
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysqla
+  template:
+    metadata:
+      labels:
+        app: mysqla
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: private
+                operator: In
+                values:
+                - "true"
+      containers:
+      - name: mysqla
+        image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/notefort-mysqla:${IMAGE_TAG}
+        ports:
+        - containerPort: 3306
+        volumeMounts:
+        - name: sqla-vct
+          mountPath: /var/lib/mysql
+
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secrets
+              key: password
+
+        resources:
+          requests:
+            cpu: "250m"      # 0.25 vCPU, enough for small MySQL workload
+            memory: "256Mi"  # 256MB of RAM, should be sufficient for a small DB
+          limits:
+            cpu: "500m"      # 0.5 vCPU, allows for occasional CPU spikes
+            memory: "512Mi"  # 512MB of RAM, MySQL can handle some bursts
+
+        livenessProbe:
+          exec:
+            command: ["mysqladmin", "ping", "-h", "localhost"]
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          
+  volumeClaimTemplates:
+  - metadata:
+      name: sqla-vct
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: sqla-sc
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: sqla-sc
+provisioner: kubernetes.io/aws-ebs
+parameters:
+  type: gp3
+  fsType: ext4
+  encrypted: "true"
+reclaimPolicy: Delete  # deleting the PVC will ALSO delete the PV, if preferred change to Retain if you want to keep the PV
+volumeBindingMode: WaitForFirstConsumer
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysqla
+spec:
+  clusterIP: None  # for stable hostname (mysqla-0.mysqla.default.svc.cluster.local)
+  selector:
+    app: mysqla
+  ports:
+  - protocol: TCP
+    port: 3306
+    targetPort: 3306
+---
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: mysqla-vpa
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: StatefulSet
+    name: mysqla
+  updatePolicy:
+    updateMode: "Off"
+  resourcePolicy:
+    containerPolicies:
+    - containerName: mysqla
+      minAllowed:
+        cpu: "125m"    
+        memory: "128Mi"   
+      maxAllowed:
+        cpu: "750m"    
+        memory: "640Mi"

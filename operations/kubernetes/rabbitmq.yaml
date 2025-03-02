@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbitmq
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rabbitmq
+  template:
+    metadata:
+      labels:
+        app: rabbitmq
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: private
+                operator: In
+                values:
+                - "true"
+      containers:
+      - name: rabbitmq
+        image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/notefort-rabbitmq:${IMAGE_TAG}
+        ports:
+        - containerPort: 5672
+        - containerPort: 15672
+        volumeMounts:
+        - name: rbtvol
+          mountPath: /var/lib/rabbitmq # Path on the container for data storage
+
+        resources:
+          requests:
+            cpu: "250m"      # 0.25 vCPU, enough for RabbitMQ message broker tasks
+            memory: "256Mi"  # 256MB RAM, enough for small-scale message handling
+          limits:
+            cpu: "500m"      # 0.5 vCPU, accommodates occasional processing peaks
+            memory: "512Mi"  # 512MB of RAM, for more queues and higher message volumes
+
+        livenessProbe:
+          exec:
+            command: ["rabbitmqctl", "node_health_check"]
+          initialDelaySeconds: 20
+          periodSeconds: 30
+      volumes:
+      - name: rbtvol
+        persistentVolumeClaim:
+          claimName: rbtvol-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: rbtvol-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: rbtvol-sc # Explicitly binds this PVC to the Storage Class named "rbtvol-sc"
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: rbtvol-sc
+provisioner: kubernetes.io/aws-ebs
+parameters:
+  type: gp3
+  fsType: ext4
+  encrypted: "true"
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq
+spec:
+  selector:
+    app: rabbitmq
+  ports:
+  - protocol: TCP
+    port: 5672
+    targetPort: 5672
+    name: amqp
+  - protocol: TCP
+    port: 15672
+    targetPort: 15672
+    name: management
+  type: ClusterIP
