@@ -1,0 +1,116 @@
+name: Application - Deploy
+
+on:
+  workflow_dispatch:
+  push:
+    paths: 
+      - 'operations/kubernetes/*'
+
+permissions:
+  id-token: write
+  contents: read    
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.GH_IAM_ROLE }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Install eksctl
+        run: |
+          curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+          sudo mv /tmp/eksctl /usr/local/bin
+
+      - name: Install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+
+      - name: Set up Kubeconfig
+        run: |
+          CLUSTER_NAME="notefort-cluster"
+          eksctl utils write-kubeconfig --region ${{ secrets.AWS_REGION }} --cluster $CLUSTER_NAME
+
+      - name: Authenticate with HashiCorp Cloud & Fetch Secrets from HCP Vault
+        run: |
+          export HCP_CLIENT_ID="${{ secrets.HCP_CLIENT_ID }}"
+          export HCP_CLIENT_SECRET="${{ secrets.HCP_CLIENT_SECRET }}"
+          export HCP_API_ENDPOINT="${{ secrets.HCP_API_ENDPOINT }}"
+
+          # Get the HCP API Token
+          HCP_API_TOKEN=$(curl --location "https://auth.idp.hashicorp.com/oauth2/token" \
+            --header "Content-Type: application/x-www-form-urlencoded" \
+            --data-urlencode "client_id=$HCP_CLIENT_ID" \
+            --data-urlencode "client_secret=$HCP_CLIENT_SECRET" \
+            --data-urlencode "grant_type=client_credentials" \
+            --data-urlencode "audience=https://api.hashicorp.cloud" | jq -r .access_token)
+
+          # Fetch Secrets from HCP Vault Secrets
+          SECRETS=$(curl --location "$HCP_API_ENDPOINT" \
+            --request GET \
+            --header "Authorization: Bearer $HCP_API_TOKEN" | jq)
+          
+          MYSQL_PASSWORD=$(echo $SECRETS | jq -r '.secrets[] | select(.name=="MYSQL_PASSWORD") | .static_version.value')
+          echo "MYSQL_PASSWORD=${MYSQL_PASSWORD}" >> $GITHUB_ENV
+
+      - name: Store HashiCorp Secrets in Kubernetes Secrets (if not exists)
+        run: |
+          if ! kubectl get secret mysql-secrets &> /dev/null; then
+            kubectl create secret generic mysql-secrets \
+              --from-literal=password="$MYSQL_PASSWORD" \
+              --dry-run=client -o yaml | kubectl apply -f -
+          else
+            echo "Secret 'mysql-secrets' already exists. Skipping creation."
+          fi
+
+      - name: Fetch Image TAG from ASM
+        run: |
+          ASM_PARAMETER_NAME="NOTEFORT_IMAGE_TAG"
+          IMAGE_TAG=$(aws ssm get-parameter --name $ASM_PARAMETER_NAME --query "Parameter.Value" --output text)
+          echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_ENV
+
+      - name: Apply Application Manifests
+        env:
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+
+        run: |
+          MANIFESTS_DIR="./operations/kubernetes"
+          for manifest in $(ls $MANIFESTS_DIR/*.yaml); do
+            envsubst < "$manifest" | kubectl apply -f -
+          done
+
+      - name: Fetch Load Balancer URL
+        run: |
+          sleep 50
+          NGINX_LB_URL=$(kubectl get svc nginx -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null)
+          echo "NGINX_LB_URL=$NGINX_LB_URL" >> $GITHUB_ENV
+
+          if [[ -z "$NGINX_LB_URL" ]]; then
+            echo "Failed to fetch Load Balancer URL. Exiting.."
+            exit 1
+          fi
+
+      - name: Wait on Nginx Load Balancer HTTP Readiness & Pods Initialization
+        run: |
+          sleep 60
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 5 "http://$NGINX_LB_URL")
+          if [[ "$HTTP_STATUS" == "200" ]]; then
+            echo "Nginx Load Balancer is ready"
+          else
+            echo "Nginx Load Balancer not functional. Exiting.."
+            exit 1
+          fi
+          
+          echo "Waiting for all pods to initialize.."
+          sleep 120
+
+          echo "NOTEFORT DEPLOYED SUCCESSFULLY - OPEN URL: http://$NGINX_LB_URL"

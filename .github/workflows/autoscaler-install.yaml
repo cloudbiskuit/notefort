@@ -1,0 +1,87 @@
+name: Autoscaler - Install
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - './github/workflows/autoscaler-install.yaml'
+
+permissions:
+  id-token: write
+  contents: read    
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.GH_IAM_ROLE }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Install eksctl
+        run: |
+          curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+          sudo mv /tmp/eksctl /usr/local/bin
+
+      - name: Install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+
+      - name: Set up Kubeconfig
+        run: |
+          CLUSTER_NAME="notefort-cluster"
+          eksctl utils write-kubeconfig --region ${{ secrets.AWS_REGION }} --cluster $CLUSTER_NAME
+
+      - name: Install Helm
+        run: |
+          curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+      - name: Add Cluster Autoscaler Helm repo & Update Helm Repos
+        run: |
+          helm repo add autoscaler https://kubernetes.github.io/autoscaler
+          helm repo update
+
+      - name: Install Cluster Autoscaler
+        env:
+          CLUSTER_NAME: "notefort-cluster"
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+
+        run: |
+          helm upgrade --install cluster-autoscaler autoscaler/cluster-autoscaler \
+            --namespace kube-system \
+            --set autoDiscovery.clusterName="$CLUSTER_NAME" \
+            --set awsRegion="$AWS_REGION" \
+            --set extraArgs.balance-similar-node-groups=true \
+            --set extraArgs.scale-down-enabled=true \
+            --set extraArgs.skip-nodes-with-local-storage=true
+
+      - name: Add Metrics Server Helm Repo & Update Helm Repos
+        run: |
+          helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/
+          helm repo update
+
+      - name: Install Metrics Server
+        run: |
+          helm upgrade --install metrics-server metrics-server/metrics-server \
+            --namespace kube-system \
+            --set args="{--kubelet-insecure-tls}"
+
+      - name: Add Vertical Pod Autoscaler (VPA) Helm repo & Update Helm Repos
+        run: |
+          helm repo add fairwinds-stable https://charts.fairwinds.com/stable
+          helm repo update
+
+      - name: Install Vertical Pod Autoscaler (VPA)
+        run: |
+          helm upgrade --install vpa fairwinds-stable/vpa \
+            --namespace kube-system \
+            --set updater.enabled=true \
+            --set recommender.enabled=true \
+            --set admissionController.enabled=false

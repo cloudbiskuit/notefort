@@ -1,0 +1,70 @@
+name: Monitoring - Setup
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - './github/workflows/monitoring-setup.yaml'
+
+permissions:
+  id-token: write
+  contents: read   
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.GH_IAM_ROLE }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Install eksctl
+        run: |
+          curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+          sudo mv /tmp/eksctl /usr/local/bin
+
+      - name: Install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+
+      - name: Set up Kubeconfig
+        run: |
+          CLUSTER_NAME="notefort-cluster"
+          eksctl utils write-kubeconfig --region ${{ secrets.AWS_REGION }} --cluster $CLUSTER_NAME
+
+      - name: Create Monitoring Namespace (if not exists)
+        run: |
+          if ! kubectl get namespace monitoring >/dev/null 2>&1; then
+            kubectl create namespace monitoring
+            echo "Namespace 'monitoring' created."
+          else
+            echo "Namespace 'monitoring' already exists. Skipping creation."
+          fi
+
+      - name: Add Prometheus Helm Repo & Update Helm Repos
+        run: | 
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm repo update
+
+      - name: Install Prometheus Operator
+        run: |
+          helm upgrade --install prometheus prometheus-community/kube-prometheus-stack \
+            --namespace monitoring \
+            --set prometheus.nodeSelector.nodegroup=private \
+            --wait
+
+      - name: Install Prometheus Adapter
+        run: |
+          PROMETHEUS_URL="http://prometheus-kube-prometheus-prometheus.monitoring"
+          
+          helm upgrade --install prometheus-adapter prometheus-community/prometheus-adapter \
+            --namespace monitoring \
+            --set prometheus.url="$PROMETHEUS_URL" \
+            --wait

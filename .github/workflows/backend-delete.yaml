@@ -1,0 +1,46 @@
+name: Backend - Delete
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+
+    env:
+      DYNAMODB_TABLE: "notefort-locks"
+      ASM_PARAMETER_NAME: "NOTEFORT_BUCKET_NAME"
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.GH_IAM_ROLE }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Fetch Bucket Name from ASM
+        run: |
+          BUCKET_NAME=$(aws ssm get-parameter --name $ASM_PARAMETER_NAME --query "Parameter.Value" --output text)
+          echo "BUCKET_NAME=${BUCKET_NAME}" >> $GITHUB_ENV
+
+      - name: Empty and Delete Bucket
+        run: |
+          aws s3 rm "s3://${BUCKET_NAME}" --recursive
+          aws s3api delete-bucket --bucket "${BUCKET_NAME}"
+
+      - name: Delete DynamoDB Table
+        run: |
+          aws dynamodb delete-table --table-name "${DYNAMODB_TABLE}"
+
+      - name: Remove Parameter from ASM
+        run: |
+          aws ssm delete-parameter --name $ASM_PARAMETER_NAME
+
+          echo "BACKEND RESOURCES DELETED SUCCESSFULLY"

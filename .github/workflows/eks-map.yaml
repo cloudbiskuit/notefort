@@ -1,0 +1,50 @@
+name: EKS - Map
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - './github/workflows/eks-map.yaml'
+
+permissions:
+  id-token: write  
+  contents: read    
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.GH_IAM_ROLE }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Install eksctl
+        run: |
+          curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+          sudo mv /tmp/eksctl /usr/local/bin
+
+      - name: Install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+
+      - name: Set up Kubeconfig
+        run: |
+          CLUSTER_NAME="notefort-cluster"
+          eksctl utils write-kubeconfig --region ${{ secrets.AWS_REGION }} --cluster $CLUSTER_NAME
+
+      - name: Add IAM User to Kubernetes ConfigMap
+        run: |
+          kubectl get configmap aws-auth -n kube-system -o yaml > aws-auth.yaml
+          yq eval '.data.mapUsers += "- userarn: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:user/${{ secrets.AWS_USER }}\n  username: ${{ secrets.AWS_USER }}\n  groups:\n    - system:masters"' aws-auth.yaml > updated-aws-auth.yaml
+          kubectl apply -f updated-aws-auth.yaml
+          kubectl get configmap aws-auth -n kube-system -o yaml
+
+          echo "IAM USER MAPPED TO KUBERNETES CONFIGMAP SUCCESSFULLY"
+      

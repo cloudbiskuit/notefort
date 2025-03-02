@@ -1,0 +1,66 @@
+name: Artifacts - Build
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'application/**'
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.GH_IAM_ROLE }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Authenticate Docker to ECR
+        run: |
+          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} \
+          | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+
+      - name: Build Tag and Push All Images
+        run: |
+          TAG=$(git rev-parse --short HEAD)
+          PREFIX="notefort-"
+          
+          # Loop through Dockerfiles and build, tag and push images
+          find . -name 'Dockerfile' | while read DOCKERFILE; do
+            SERVICE_NAME=$(basename $(dirname $DOCKERFILE))
+            ECR_REPO_NAME="${PREFIX}${SERVICE_NAME}"
+            IMAGE_NAME="$ECR_REPO_NAME"
+            ECR_REPO_URL="${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/$ECR_REPO_NAME"
+            
+            if ! aws ecr describe-repositories --repository-names $ECR_REPO_NAME --region ${{ secrets.AWS_REGION }} > /dev/null 2>&1; then
+              aws ecr create-repository --repository-name $ECR_REPO_NAME --region ${{ secrets.AWS_REGION }}
+              echo "Repository $ECR_REPO_NAME created successfully"
+            else
+              echo "$Repository $ECR_REPO_NAME already exists"
+            fi
+            
+            docker build -t $IMAGE_NAME:$TAG -f $DOCKERFILE $(dirname $DOCKERFILE)
+            docker tag "$IMAGE_NAME:$TAG" "$ECR_REPO_URL:$TAG"
+            docker push "$ECR_REPO_URL:$TAG"
+            echo "Image $IMAGE_NAME:$TAG pushed successfully"
+          done
+
+          echo "IMAGES BUILT, TAGGED AND PUSHED TO ECR SUCCESSFULLY"
+
+      - name: Store Image Tag in ASM
+        run: | 
+          ASM_PARAMETER_NAME="NOTEFORT_IMAGE_TAG"
+          TAG=$(git rev-parse --short HEAD)
+
+          aws ssm put-parameter --name $ASM_PARAMETER_NAME --value $TAG --type String --overwrite
+          
+          echo "IMAGE TAG $TAG STORED IN AWS SYSTEMS MANAGER SUCCESSFULLY"

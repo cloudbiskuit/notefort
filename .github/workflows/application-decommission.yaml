@@ -1,0 +1,62 @@
+name: Application - Decommission
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.GH_IAM_ROLE }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Install eksctl
+        run: |
+          curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+          sudo mv /tmp/eksctl /usr/local/bin
+
+      - name: Install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+
+      - name: Set up Kubeconfig
+        run: |
+          CLUSTER_NAME="notefort-cluster"
+          eksctl utils write-kubeconfig --region ${{ secrets.AWS_REGION }} --cluster $CLUSTER_NAME
+
+      - name: Fetch Image TAG from ASM
+        run: |
+          ASM_PARAMETER_NAME="NOTEFORT_IMAGE_TAG"
+
+          IMAGE_TAG=$(aws ssm get-parameter --name $ASM_PARAMETER_NAME --query "Parameter.Value" --output text)
+          echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_ENV
+
+      - name: Delete Application Manifests
+        env:
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          
+        run: |
+          MANIFESTS_DIR="./operations/kubernetes"
+
+          for manifest in $(ls $MANIFESTS_DIR/*.yaml); do
+            envsubst < "$manifest" | kubectl delete -f -
+          done
+          
+          for pvc in $(kubectl get pvc -o jsonpath='{.items[*].metadata.name}'); do
+            kubectl delete pvc $pvc
+          done
+
+          echo "NOTEFORT DECOMMISSIONED SUCCESSFULLY"
