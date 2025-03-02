@@ -190,10 +190,6 @@ The following screenshots validate that the application is running as expected. 
 </div>  
 
 <div align="center">
-  <img src="./images/artifacts-build.png" width="1000">
-</div>  
-
-<div align="center">
   <img src="./images/backend-create.png" width="1000">
 </div>  
 
@@ -202,11 +198,19 @@ The following screenshots validate that the application is running as expected. 
 </div>  
 
 <div align="center">
+  <img src="./images/eks-map.png" width="1000">
+</div>  
+
+<div align="center">
   <img src="./images/autoscaler-install.png" width="1000">
 </div>  
 
 <div align="center">
-  <img src="./images/eks-map.png" width="1000">
+  <img src="./images/monitoring-setup.png" width="1000">
+</div>  
+
+<div align="center">
+  <img src="./images/artifacts-build.png" width="1000">
 </div>  
 
 <div align="center">
