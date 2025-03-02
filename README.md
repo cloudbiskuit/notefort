@@ -161,8 +161,8 @@ To install the Cluster Autoscaler, the Vertical Pod Autoscaler (VPA), and the Me
 ### Setup Prometheus and Grafana
 To install Prometheus and its Adapter, and Grafana in the EKS `monitoring` namespace, run the GitHub Actions workflow `Monitoring - Setup`.
 
-**Note**: Follow the instructions provided in the workflow step output to port-forward a tunnel to Grafana Pod.  
-**Note**: Run the following command to port-forward to Prometheus: kubectl port-forward -n monitoring svc/prometheus-operated `port`:9090 where port is a free port on your local system.
+**Note**: Follow the instructions provided in the workflow output to get Grafana password, and to port-forward a tunnel to Grafana. To access Grafana UI on your system, go to: https://localhost:3000  
+**Note**: Run the following command to port-forward to Prometheus: kubectl port-forward -n monitoring svc/prometheus-operated `port`:9090 where port is a free port on your local system. To access Prometheus UI on your system, go to: https://localhost:`port`
 
 ### Deploy and Access Application
 To deploy the application Kubernetes manifest files and access the application, run the GitHub Actions workflow `Application - Deploy`.
