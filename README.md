@@ -157,6 +157,8 @@ To provision the terraform S3 bucket and the DynamoDB Table, run the GitHub Acti
 ### Provision AWS Infrastructure and EKS Cluster 
 To intialize Terraform state in the newly created bucket, and provision the AWS infrastructure and the EKS cluster resources, run the GitHub Actions workflow `Infrastructure - Provision`.
 
+**Note**: For advanced engineers, refactor the Terraform files into `modules` to make the code ready for multiple environments (e.g., development and production). Additionaly, modify terraform `init` and `apply` commands to account for `.tfvars` files.
+
 ### Map IAM User to Kubernetes RBAC
 To map the IAM user to Kubernetes RBAC, run the GitHub Actions workflow `EKS - Map`.
 
@@ -177,6 +179,8 @@ To install Prometheus and its Adapter, and Grafana in the EKS `monitoring` names
 To deploy the application Kubernetes manifest files and access the application, run the GitHub Actions workflow `Application - Deploy`.
 
 To access NOTEFORT application, click on the `URL` provided in the terminal output after the Workflow completes.
+
+**Note**: For advanced engineers, Refactor the Kubernetes manifests into Helm charts to make the application ready for multiple environments (e.g., development and production). Additionaly, Use Helm commands instead of applying manifests directly with kubectl.
 
 ### Decommission Application
 To decommission the application form the Kubernetes cluster, run the GitHub Actions workflow `Application - Decommission`.
