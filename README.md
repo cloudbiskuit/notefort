@@ -109,10 +109,6 @@ NOTEFORT uses Prometheus for custom metrics and Grafana.
 ## Getting Started
 This repository contains the application code, and the workflow to create ECR registries, build, and push images. Also, it contains Terraform files and Kubernetes manifests, and the workflows to provision AWS infrastructure, set up the EKS cluster, and deploy the application.
 
-**NOTE**: To improve clarity, I followed the approach of creating multiple GitHub Workflows, ensure you execute them sequentially. 
-
-**NOTE**: For advanced engineers, the workflows can be combined if preferred, a Workflow can be refractored as a seaparate Job.
-
 ### Prerequisites: AWS OIDC Provider  
 You have to Setup AWS OIDC Provider and create an IAM role to be used by GitHub Actions to authenticate with AWS, refer to the [AWS OIDC Provider guide](https://aws.amazon.com/blogs/security/use-iam-roles-to-connect-github-actions-to-actions-in-aws) for detailed instructions. You can grant the IAM role used by GitHub Actions the AdministratorAccess IAM Policy, in a production environment adhere to the principle of least privilege.
 
@@ -146,6 +142,10 @@ Forking does not copy Github Actions Secrets. Create the following Github Action
 Ensure these Secrets are created before running the Github Actions Workflow.
 
 ## GitHub Workflows
+**NOTE**: To improve clarity, I followed the approach of creating multiple GitHub Workflows, ensure you execute them sequentially. 
+
+**NOTE**: For advanced engineers, the workflows can be combined if preferred, a Workflow can be refractored as a seaparate Job.
+
 ### Build Artifacts & Create ECR Registries
 To create ECR registries, build and tag (commit hash) and push the images, run the workflow `Artifacts - Build`.
 
@@ -282,7 +282,10 @@ The following screenshots validate that the application is running as expected. 
   <img src="./images/grafana.png" width="1000">
 </div>  
 
-<br>
+## Future Improvements (In Progress)
+- ArgoCD and Rollouts
+- Sonarqube 
+- Splunk
 
 ## Contact
 [salim.zaza@outlook.com](mailto:salim.zaza@outlook.com)
