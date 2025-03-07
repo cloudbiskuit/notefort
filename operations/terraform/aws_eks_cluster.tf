@@ -1,4 +1,4 @@
-# EKS Cluster
+# EKS CLUSTER
 resource "aws_eks_cluster" "eks_cluster" {
   name     = "notefort-cluster"
   version  = "1.32"
@@ -12,10 +12,10 @@ resource "aws_eks_cluster" "eks_cluster" {
       aws_subnet.private_b.id
     ]    
     endpoint_public_access = true
-    # public_access_cidrs = ["${aws_eip.nat_a.public_ip}/32", "${aws_eip.nat_b.public_ip}/32", my-ip/32]
+    // public_access_cidrs = ["${aws_eip.nat_a.public_ip}/32", "${aws_eip.nat_b.public_ip}/32", my-ip/32]
     
-    # Attach the additional Control Plane security group
-    security_group_ids = [ aws_security_group.eks_additional_sg.id ]
+    security_group_ids = [ aws_security_group.eks_additional_sg.id ] # Attach the additional Control Plane security group
+
   }
   
   tags = {

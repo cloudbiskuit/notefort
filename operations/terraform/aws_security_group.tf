@@ -1,26 +1,25 @@
-# Security Group for the Public EKS Worker Nodes
+# SECURITY GROUP FOR PUBLIC EKS WORKER NODES
 resource "aws_security_group" "public_eks_worker_sg" {
   name_prefix = "public-eks-worker-sg"
-  description = "Security group for public EKS worker nodes"
   vpc_id      = aws_vpc.main.id
 
-  # Inbound rule for SSH access
+  # ssh
   ingress {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # Replace with your IP address
+    cidr_blocks = ["0.0.0.0/0"] # Restrict to your IP's
   }
 
-  # Inbound rule for NGINX notefort HTTP access
+  # notefort http
   ingress {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # Replace with your IP address
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Inbound rule for DNS resolution
+  # dns udp
   ingress {
     from_port   = 53
     to_port     = 53
@@ -28,7 +27,7 @@ resource "aws_security_group" "public_eks_worker_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
   
-  # Inbound rule for DNS resolution
+  # dns tcp
   ingress {
     from_port   = 53
     to_port     = 53
@@ -36,15 +35,15 @@ resource "aws_security_group" "public_eks_worker_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Inbound rule for Control Plane to worker node Kubelet
+  # control plane - kubelet
   ingress {
     from_port   = 10250
     to_port     = 10250
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["0.0.0.0/0"] # Restrict to control plane security group
   }
 
-  # Allow Metrics Server (internal cluster traffic)
+  # metrics server
   ingress {
     from_port   = 443
     to_port     = 443
@@ -52,15 +51,15 @@ resource "aws_security_group" "public_eks_worker_sg" {
     cidr_blocks = ["10.0.0.0/16"]
   }
 
-  # Allow Prometheus UI Access
+  # prometheus ui
   ingress {
     from_port   = 9090
     to_port     = 9090
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]  # Replace with your IP address
+    cidr_blocks = ["0.0.0.0/0"]  # Restrict to your IP's
   }
 
-  # Allow Prometheus Node Exporter
+  # prometheus node exporter
   ingress {
     from_port   = 9100
     to_port     = 9100
@@ -68,7 +67,7 @@ resource "aws_security_group" "public_eks_worker_sg" {
     cidr_blocks = ["10.0.0.0/16"]
   }
 
-  # Allow Kubernetes API server communication with Prometheus Adapter
+  # api server - prometheus adapter
   ingress {
     from_port   = 6443
     to_port     = 6443
@@ -76,7 +75,7 @@ resource "aws_security_group" "public_eks_worker_sg" {
     cidr_blocks = ["10.0.0.0/16"]
   }
 
-  # Allow Kubernetes API server communication with Prometheus Adapter (Custom Metrics)
+  # api server - prometheus adapter - custom metrics
   ingress {
     from_port   = 8443
     to_port     = 8443
@@ -103,13 +102,12 @@ resource "aws_security_group" "public_eks_worker_sg" {
   }
 }
 
-# Security Group for the Private EKS Worker Nodes
+# SECURITY GROUP FOR PRIVATE EKS WORKER NODES
 resource "aws_security_group" "private_eks_worker_sg" {
   name_prefix = "private-eks-worker-sg"
-  description = "Security group for private EKS worker nodes"
   vpc_id      = aws_vpc.main.id
 
-  # Inbound rule for SSH access
+  # ssh
   ingress {
     from_port   = 22
     to_port     = 22
@@ -117,15 +115,7 @@ resource "aws_security_group" "private_eks_worker_sg" {
     cidr_blocks = ["10.0.0.0/16"]
   }
 
-  # Inbound rule for Prometheus access
-  ingress {
-    from_port   = 9090
-    to_port     = 9090
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # Replace with your IP address
-  }
-
-  # Inbound rule for REACT APP access
+  # react
   ingress {
     from_port   = 3000
     to_port     = 3000
@@ -133,7 +123,7 @@ resource "aws_security_group" "private_eks_worker_sg" {
     cidr_blocks = ["10.0.0.0/16"]
   }
 
-  # Inbound rule for NODEJSA APP access
+  # nodejsa
   ingress {
     from_port   = 4000
     to_port     = 4000
@@ -141,7 +131,7 @@ resource "aws_security_group" "private_eks_worker_sg" {
     cidr_blocks = ["10.0.0.0/16"]
   }
 
-  # Inbound rule for NODEJSB APP access
+  # nodejsb
   ingress {
     from_port   = 5000
     to_port     = 5000
@@ -149,15 +139,15 @@ resource "aws_security_group" "private_eks_worker_sg" {
     cidr_blocks = ["10.0.0.0/16"]
   }
   
-  # Inbound rule for Control Plane to worker node Kubelet
+  # control plane - kubelet
   ingress {
     from_port   = 10250
     to_port     = 10250
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["0.0.0.0/0"] # Restrict to control plane security group
   }
 
-  # Inbound rule for DNS resolution
+  # dns udp
   ingress {
     from_port   = 53
     to_port     = 53
@@ -165,10 +155,81 @@ resource "aws_security_group" "private_eks_worker_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Inbound rule for DNS resolution
+  # dns tcp
   ingress {
     from_port   = 53
     to_port     = 53
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # prometheus ui
+  ingress {
+    from_port   = 9090
+    to_port     = 9090
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"] # ??
+  }
+
+  ingress {
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "private-eks-worker-sg"
+  }
+}
+
+# ADDITIONAL SECURITY GROUP FOR K8S CONTROL PLANE
+resource "aws_security_group" "eks_additional_sg" {
+  name        = "eks-additional-sg"
+  vpc_id      = aws_vpc.main.id
+
+  # api endoint
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # dns udp
+  ingress {
+    from_port   = 53
+    to_port     = 53
+    protocol    = "udp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # dns tcp
+  ingress {
+    from_port   = 53
+    to_port     = 53
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 9153
+    to_port     = 9153
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # aws-node add-on
+  ingress {
+    from_port   = 61678
+    to_port     = 61678
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -188,6 +249,6 @@ resource "aws_security_group" "private_eks_worker_sg" {
   }
 
   tags = {
-    Name = "private-eks-worker-sg"
+    Name = "eks-additional-sg"
   }
 }

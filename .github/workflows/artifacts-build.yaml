@@ -58,9 +58,9 @@ jobs:
 
       - name: Store Image Tag in ASM
         run: | 
-          ASM_PARAMETER_NAME="NOTEFORT_IMAGE_TAG"
+          IMAGE_TAG_ASM_PARAMETER_NAME="notefort-image-tag"
           TAG=$(git rev-parse --short HEAD)
 
-          aws ssm put-parameter --name $ASM_PARAMETER_NAME --value $TAG --type String --overwrite
+          aws ssm put-parameter --name $IMAGE_TAG_ASM_PARAMETER_NAME --value $TAG --type String --overwrite
           
           echo "IMAGE TAG $TAG STORED IN AWS SYSTEMS MANAGER SUCCESSFULLY"

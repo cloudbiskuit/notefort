@@ -1,7 +1,6 @@
-# EC2 Launch Template for Public EKS Worker Nodes
+# EC2 LAUNCH TEMPLATE FOR PUBLIC EKS WORKER NODES
 resource "aws_launch_template" "public_eks_worker_launch_template" {
   name_prefix   = "public-eks-worker-template"
-  description   = "Launch template for public EKS worker nodes"
   instance_type = "t3.medium" # 2 vCPUs, 4GB RAM
   image_id      = "ami-036dcb2b3ea936d25"
 
@@ -38,7 +37,7 @@ EOT
   depends_on = [ aws_security_group.public_eks_worker_sg ]
 }
 
-# EC2 Launch Template for Private EKS Worker Nodes
+# EC2 LAUNCH TEMPLATE FOR PRIVATE EKS WORKER NODES
 resource "aws_launch_template" "private_eks_worker_launch_template" {
   name_prefix   = "private-eks-worker-template"
   description   = "Launch template for private EKS worker nodes"

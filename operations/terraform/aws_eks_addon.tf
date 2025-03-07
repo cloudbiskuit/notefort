@@ -1,5 +1,4 @@
-# Required EKS Add-ons
-# CoreDNS Add-on
+# CORE-DNS ADD-ON
 resource "aws_eks_addon" "coredns" {
   cluster_name = aws_eks_cluster.eks_cluster.name
   addon_name   = "coredns"
@@ -10,19 +9,19 @@ resource "aws_eks_addon" "coredns" {
   ]
 }
 
-# kube-proxy Add-on
+# KUBE-PROXY ADD-ON
 resource "aws_eks_addon" "kube_proxy" {
   cluster_name = aws_eks_cluster.eks_cluster.name
   addon_name   = "kube-proxy"
 }
 
-# Amazon VPC CNI Add-on
+# VPC CNI ADD-ON
 resource "aws_eks_addon" "vpc_cni" {
   cluster_name = aws_eks_cluster.eks_cluster.name
   addon_name   = "vpc-cni"
 }
 
-# Amazon EBS CSI Driver Add-on
+# EBS CSI DRIVER ADD-ON
 resource "aws_eks_addon" "ebs_csi" {
   cluster_name = aws_eks_cluster.eks_cluster.name
   addon_name   = "aws-ebs-csi-driver"

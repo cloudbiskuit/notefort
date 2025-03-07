@@ -1,4 +1,4 @@
-# Subnets
+# PUBLIC SUBNET A
 resource "aws_subnet" "public_a" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = "10.0.1.0/24"
@@ -8,9 +8,9 @@ resource "aws_subnet" "public_a" {
     Name = "public-a"
   }
 
-  depends_on = [aws_internet_gateway.main]
 }
 
+# PUBLIC SUBNET B
 resource "aws_subnet" "public_b" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = "10.0.2.0/24"
@@ -20,9 +20,8 @@ resource "aws_subnet" "public_b" {
     Name = "public-b"
   }
 
-  depends_on = [aws_internet_gateway.main]
 }
-
+# PRIVATE SUBNET A
 resource "aws_subnet" "private_a" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = "10.0.3.0/24"
@@ -32,9 +31,9 @@ resource "aws_subnet" "private_a" {
     Name = "private-a"
   }
 
-  depends_on = [aws_internet_gateway.main]
 }
 
+# PRIVATE SUBNET B  
 resource "aws_subnet" "private_b" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = "10.0.4.0/24"
@@ -44,5 +43,4 @@ resource "aws_subnet" "private_b" {
     Name = "private-b"
   }
 
-  depends_on = [aws_internet_gateway.main]
 }

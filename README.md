@@ -1,4 +1,4 @@
-# NOTEFORT: A Showcase of Cloud & DevOps Best Principles
+# NOTEFORT: Cloud & DevOps Best Practices
 
 ## About 
 No matter the size or complexity of your application, it should follow the design and deployment principles of **NOTEFORT** ensuring scalability, resilience, and efficiency in the cloud.
@@ -113,11 +113,17 @@ This repository contains the application code, and the workflow to create ECR re
 You have to Setup AWS OIDC Provider and create an IAM role to be used by GitHub Actions to authenticate with AWS, refer to the [AWS OIDC Provider guide](https://aws.amazon.com/blogs/security/use-iam-roles-to-connect-github-actions-to-actions-in-aws) for detailed instructions. You can grant the IAM role used by GitHub Actions the AdministratorAccess IAM Policy, in a production environment adhere to the principle of least privilege.
 
 ### Prerequisites: SSH Key Pair 
-On your system generate and push to AWS the SSH pubic key required to SSH into EKS cluster public EC2 instances using the `ssh.sh` script:
+To generate and push to AWS the SSH pubic key required to SSH into EKS cluster public EC2 instances, from your system run `generate-ssh-keypair.sh` script:
    ```bash
-   cd ./scripts
-   chmod +x ssh.sh
-   ./ssh.sh 
+   chmod +x generate-ssh-keypair.sh
+   ./generate-ssh-keypair.sh
+   ```
+
+### Prerequisites: Remote Backend Resources
+To create the S3 bucket and the DynamoDB Table, from your system run `create-backend-resources.sh` script:
+   ```bash
+   chmod +x create-backend-resources.sh
+   ./create-backend-resources.sh
    ```
 
 ### Prerequisites: HashiCorp Cloud Vault Secrets
@@ -142,54 +148,48 @@ Forking does not copy Github Actions Secrets. Create the following Github Action
 Ensure these Secrets are created before running the Github Actions Workflow.
 
 ## GitHub Workflows
-**NOTE**: To improve clarity, I followed the approach of creating multiple GitHub Workflows, ensure you execute them sequentially. 
-
-**NOTE**: For advanced engineers, the workflows can be combined if preferred, a Workflow can be refractored as a seaparate Job.
-
-### Build Artifacts & Create ECR Registries
-To create ECR registries, build and tag (commit hash) and push the images, run the workflow `Artifacts - Build`.
+### Artifacts - build
+This workflow creates AWS ECR registries, builds tags (commit hash) and pushes the images to ECR.
 
 **Note**: For simplicity, this workflow builds (same tag) all images in a single process. In a typical development setup, each image should be built (different tags) separately with its own workflow.
 
-### Prepare Backend for Terraform 
-To provision the terraform S3 bucket and the DynamoDB Table, run the GitHub Actions workflow `Backend - Create`.
+### Artifacts - Cleanup
+This workflow deletes the AWS ECR registries belonging to the application.
 
-### Provision AWS Infrastructure and EKS Cluster 
-To intialize Terraform state in the newly created bucket, and provision the AWS infrastructure and the EKS cluster resources, run the GitHub Actions workflow `Infrastructure - Provision`.
+### Infrastructure - Provision
+This workflow performs the following jobs:
 
-**Note**: For advanced engineers, refactor the Terraform files into `modules` to make the code ready for multiple environments (e.g., development and production). Additionaly, modify terraform `init` and `apply` commands to account for `.tfvars` files.
-
-### Map IAM User to Kubernetes RBAC
-To map the IAM user to Kubernetes RBAC, run the GitHub Actions workflow `EKS - Map`.
+- Intialize Terraform state in the newly created bucket, and provision the AWS infrastructure and the EKS cluster resources.
+- Map the IAM user to Kubernetes RBAC.
+- Install the Cluster Autoscaler, the Vertical Pod Autoscaler (VPA), and the Metrics Server in the EKS `kube-system` namespace.
+- Install Prometheus and its Adapter, and Grafana in the EKS `monitoring` namespace.
 
 **Note**: the IAM user defined in the GitHub Actions Variable `AWS_USER` will be mapped to the system:masters EKS RBAC group, granting them administrative privileges on the newly created cluster. As a result, `AWS_USER` will be able to view and manage the new EKS cluster in the AWS Console and from AWS CLI. 
 
-### Install Autoscaler, VPA, and Metrics Server
-To install the Cluster Autoscaler, the Vertical Pod Autoscaler (VPA), and the Metrics Server in the EKS `kube-system` namespace, run the GitHub Actions workflow `Autoscaler - Install`.
+**Note**: The code is ready for multiple environments (development and production), modify `dev.tfvars` and `prod.tfvars` as needed. Additionaly, modify `terraform apply` commands to account for `.tfvars` files.
 
 **Note**: The necessary IAM permissions for the Cluster Autoscaler to modify EKS node groups have already been accounted for by attaching a managed IAM policy to the IAM role associated with the node groups.
 
-### Setup Prometheus and Grafana
-To install Prometheus and its Adapter, and Grafana in the EKS `monitoring` namespace, run the GitHub Actions workflow `Monitoring - Setup`.
+**Note**: Follow the instructions provided in the workflow output to get Grafana password, and to port-forward a tunnel to Grafana. To access Grafana UI on your system, go to: https://localhost:3000
 
-**Note**: Follow the instructions provided in the workflow output to get Grafana password, and to port-forward a tunnel to Grafana. To access Grafana UI on your system, go to: https://localhost:3000  
-**Note**: Run the following command to port-forward to Prometheus: kubectl port-forward -n monitoring svc/prometheus-operated `port`:9090 where port is a free port on your local system. To access Prometheus UI on your system, go to: https://localhost:`port`
+**Note**: On your system, run the following command to port-forward to Prometheus: kubectl port-forward -n monitoring svc/prometheus-operated `port`:9090 where port is a free port on your local system. To access Prometheus UI on your system, go to: https://localhost:`port`
 
-### Deploy and Access Application
-To deploy the application Kubernetes manifest files and access the application, run the GitHub Actions workflow `Application - Deploy`.
+### Infrastructure - Destroy
+This workflow destroys the AWS infrastructure and the EKS cluster.
 
-To access NOTEFORT application, click on the `URL` provided in the terminal output after the Workflow completes.
+Additionaly, To delete the S3 bucket and the DynamoDB Table, from your system run `delete-backend-resources.sh` script:
+   ```bash
+   chmod +x delete-backend-resources.sh
+   ./delete-backend-resources.sh
+   ```
 
-**Note**: For advanced engineers, Refactor the Kubernetes manifests into Helm charts to make the application ready for multiple environments (e.g., development and production). Additionaly, Use Helm commands instead of applying manifests directly with kubectl.
+### Application - Deploy
+This workflow deploys the application Kubernetes manifest files. The `URL` will be provided in the terminal output after the Workflow completes.
 
-### Decommission Application
-To decommission the application form the Kubernetes cluster, run the GitHub Actions workflow `Application - Decommission`.
+**Note**: For advanced engineers, refactor the Kubernetes manifests into Helm charts to make the application ready for multiple environments (e.g., development and production). Additionaly, Use Helm commands instead of applying manifests directly with kubectl.
 
-### Destroy AWS Infrastructure and EKS Cluster
-To destroy the AWS infrastructure and the EKS cluster, run the GitHub Actions workflow `Infrastructure - Destroy`.
-
-### Cleanup Backend Resources
-To delete the backend bucket and associated resources, run the GitHub Actions workflow `Backend - Delete`.
+### Application - Decommission
+This workflow decommissions the application from the Kubernetes cluster.
 
 ## Proof of Concept (PoC)
 This section provides a demonstration of Notefort successfully deployed on AWS EKS, confirming the end-to-end setup from infrastructure provisioning to application deployment.  
@@ -199,11 +199,19 @@ The following screenshots validate that the application is running as expected. 
 <br>
 
 <div align="center">
+  <img src="./images/backend-create.png" width="1000">
+</div>  
+
+<div align="center">
   <img src="./images/workflows.png" width="1000">
 </div>  
 
 <div align="center">
-  <img src="./images/backend-create.png" width="1000">
+  <img src="./images/artifacts-build.png" width="1000">
+</div>  
+
+<div align="center">
+  <img src="./images/infrastructure-provision-workflow.png" width="1000">
 </div>  
 
 <div align="center">
@@ -211,19 +219,15 @@ The following screenshots validate that the application is running as expected. 
 </div>  
 
 <div align="center">
-  <img src="./images/eks-map.png" width="1000">
+  <img src="./images/iam-eks-map.png" width="1000">
 </div>  
 
 <div align="center">
-  <img src="./images/autoscaler-install.png" width="1000">
+  <img src="./images/autoscaler-setup.png" width="1000">
 </div>  
 
 <div align="center">
   <img src="./images/monitoring-setup.png" width="1000">
-</div>  
-
-<div align="center">
-  <img src="./images/artifacts-build.png" width="1000">
 </div>  
 
 <div align="center">
@@ -236,6 +240,10 @@ The following screenshots validate that the application is running as expected. 
 
 <div align="center">
   <img src="./images/infrastructure-destroy.png" width="1000">
+</div>  
+
+<div align="center">
+  <img src="./images/artifacts-cleanup.png" width="1000">
 </div>  
 
 <div align="center">
@@ -267,7 +275,7 @@ The following screenshots validate that the application is running as expected. 
 </div>  
 
 <div align="center">
-  <img src="./images/repositories.png" width="1000">
+  <img src="./images/registries.png" width="1000">
 </div>  
 
 <div align="center">

@@ -73,8 +73,7 @@ jobs:
 
       - name: Fetch Image TAG from ASM
         run: |
-          ASM_PARAMETER_NAME="NOTEFORT_IMAGE_TAG"
-          IMAGE_TAG=$(aws ssm get-parameter --name $ASM_PARAMETER_NAME --query "Parameter.Value" --output text)
+          IMAGE_TAG=$(aws ssm get-parameter --name "notefort-image-tag" --query "Parameter.Value" --output text)
           echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_ENV
 
       - name: Apply Application Manifests
@@ -113,4 +112,4 @@ jobs:
           echo "Waiting for all pods to initialize.."
           sleep 120
 
-          echo "NOTEFORT DEPLOYED SUCCESSFULLY - OPEN URL: http://$NGINX_LB_URL"
+          echo "NOTEFORT DEPLOYED SUCCESSFULLY - OPEN THE URL http://$NGINX_LB_URL AND REPLACE *** WITH YOUR AWS REGION"

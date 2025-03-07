@@ -1,4 +1,4 @@
-# Public EKS Node Group
+# PUBLIC EKS NODE GROUP
 resource "aws_eks_node_group" "public_eks_node_group" {
   cluster_name    = aws_eks_cluster.eks_cluster.name
   node_group_name = "public-node-group"
@@ -10,11 +10,10 @@ resource "aws_eks_node_group" "public_eks_node_group" {
     version = "$Latest"
   }
 
-  # Adjust the desired size of the nodes here
   scaling_config {
-    desired_size = 2  # The system will launch with desired nodes 
-    max_size     = 3  # The system can scale up to a max
-    min_size     = 2  # The system can scale down to min node but never below that
+    desired_size = 2
+    max_size     = 3
+    min_size     = 2
   }
 
   labels = {
@@ -28,7 +27,7 @@ resource "aws_eks_node_group" "public_eks_node_group" {
   depends_on = [aws_internet_gateway.main]
 }
 
-# Private EKS Node Group Creation
+# PRIVATE EKS NODE GROUP
 resource "aws_eks_node_group" "private_eks_node_group" {
   cluster_name    = aws_eks_cluster.eks_cluster.name
   node_group_name = "private-node-group"
@@ -40,7 +39,6 @@ resource "aws_eks_node_group" "private_eks_node_group" {
     version = "$Latest"
   }
 
-  # Adjust the desired size of the nodes here
   scaling_config {
     desired_size = 2
     max_size     = 3

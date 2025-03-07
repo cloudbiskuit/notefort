@@ -1,0 +1,37 @@
+name: Artifacts - Cleanup
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.GH_IAM_ROLE }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Delete NOTEFORT ECR Registries
+        run: |
+          PREFIX="notefort-"
+          REPOS=$(aws ecr describe-repositories --query "repositories[?starts_with(repositoryName, '$PREFIX')].repositoryName" --output text)
+          
+          if [ -z "$REPOS" ]; then
+            echo "No repositories found with prefix $PREFIX"
+          else
+            for REPO in $REPOS; do
+              aws ecr delete-repository --repository-name $REPO --region ${{ secrets.AWS_REGION }} --force
+              echo "Deleted repository: $REPO"
+            done
+            echo "ECR REGISTRIES DELETED SUCCESSFULLY"
+          fi
