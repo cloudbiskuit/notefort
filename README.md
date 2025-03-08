@@ -69,12 +69,12 @@ NOTEFORT is fully containerized with Docker:
 - Database: Each backend service has its own MySQL database container instance `mysqla` and `mysqlb`.
 - Reverse Proxy: `nginx` container Acts as a reverse proxy for the frontend.
 
-## Terraform (IaC)
+## Terraform
 Infrastructure as Code (IaC) streamlines cloud infrastructure management by automating resource provisioning and configuration through code. It ensures consistency, reduces human error, and simplifies version control, making infrastructure changes auditable and repeatable. IaC enables faster deployment, scaling, and recovery while supporting collaborative development practices. 
 
 NOTEFORT AWS Infrastructure and EKS cluster are provisioned using Terraform.
 
-## HashiCorp Cloud Vault Secrets
+## HashiCorp Cloud Vault
 HashiCorp Vault is a powerful tool for securely storing and accessing sensitive data such as API keys, database credentials, and other secrets. It provides centralized secret management, access control, and encryption, ensuring that applications can securely retrieve secrets without hardcoding them.
 
 NOTEFORT utilizes HashiCorp Vault to securely manage and inject secrets into its Kubernetes environment.
@@ -104,7 +104,7 @@ NOTEFORT uses Helm Charts.
 ## Prometheus & Grafana
 Prometheus is an open-source monitoring and alerting toolkit designed for reliability and scalability. It collects and stores metrics in a time-series database, allowing for real-time monitoring of applications and infrastructure. Grafana is an open-source visualization and analytics platform that integrates with Prometheus to display the collected metrics in customizable, interactive dashboards. 
 
-NOTEFORT uses Prometheus for custom metrics and Grafana.
+NOTEFORT uses Grafana and Prometheus for custom metrics.
 
 ## Getting Started
 This repository contains the application code, and the workflow to create ECR registries, build, and push images. Also, it contains Terraform files and Kubernetes manifests, and the workflows to provision AWS infrastructure, set up the EKS cluster, and deploy the application.
@@ -134,7 +134,7 @@ This secret is securely stored in HCP and later fetched during deployment using 
 ### Prerequisites: Forking the Repositoy
 Go to **notefort** repository page on GitHub and Click the "Fork" button at the top right of the page.
 
-### Prerequisites: GitHub Actions Secrets
+### Prerequisites: GitHub Actions Secrets 
 Forking does not copy Github Actions Secrets. Create the following Github Actions Secrets in the newly forked repository:
 
 - **AWS_ACCOUNT_ID**: The 12-digit AWS account number where the resources will be deployed.
@@ -144,6 +144,9 @@ Forking does not copy Github Actions Secrets. Create the following Github Action
 - **HCP_CLIENT_ID**: The HCP service principal client ID.
 - **HCP_CLIENT_SECRET**: The HCP service principal client secret.
 - **HCP_API_ENDPOINT**: The HCP API Endpoint URL for HashiCorp Cloud Platform (HCP) Vault Secrets.
+
+Additionally, create the following Github Actions Variables:
+- **EKS_CLUSTER_NAME**: "notefort-cluster"
 
 Ensure these Secrets are created before running the Github Actions Workflow.
 
@@ -164,9 +167,9 @@ This workflow performs the following jobs:
 - Install the Cluster Autoscaler, the Vertical Pod Autoscaler (VPA), and the Metrics Server in the EKS `kube-system` namespace.
 - Install Prometheus and its Adapter, and Grafana in the EKS `monitoring` namespace.
 
-**Note**: the IAM user defined in the GitHub Actions Variable `AWS_USER` will be mapped to the system:masters EKS RBAC group, granting them administrative privileges on the newly created cluster. As a result, `AWS_USER` will be able to view and manage the new EKS cluster in the AWS Console and from AWS CLI. 
+**Note**: The code is ready for multiple environments (e.g., development and production), modify `dev.tfvars` and `prod.tfvars` as needed (e.g., instance type). Additionaly, modify `terraform apply` commands to account for `.tfvars` files.
 
-**Note**: The code is ready for multiple environments (development and production), modify `dev.tfvars` and `prod.tfvars` as needed. Additionaly, modify `terraform apply` commands to account for `.tfvars` files.
+**Note**: the IAM user defined in the GitHub Actions Variable `AWS_USER` will be mapped to the system:masters EKS RBAC group, granting them administrative privileges on the newly created cluster. As a result, `AWS_USER` will be able to view and manage the new EKS cluster in the AWS Console and from AWS CLI. 
 
 **Note**: The necessary IAM permissions for the Cluster Autoscaler to modify EKS node groups have already been accounted for by attaching a managed IAM policy to the IAM role associated with the node groups.
 

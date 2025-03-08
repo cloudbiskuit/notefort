@@ -4,8 +4,8 @@ resource "aws_eks_addon" "coredns" {
   addon_name   = "coredns"
 
   depends_on = [ 
-    aws_eks_node_group.public_eks_node_group,
-    aws_eks_node_group.private_eks_node_group 
+    module.public_eks_node_group,
+    module.private_eks_node_group 
   ]
 }
 
@@ -27,7 +27,7 @@ resource "aws_eks_addon" "ebs_csi" {
   addon_name   = "aws-ebs-csi-driver"
 
   depends_on = [ 
-    aws_eks_node_group.public_eks_node_group,
-    aws_eks_node_group.private_eks_node_group 
+    module.public_eks_node_group,
+    module.private_eks_node_group 
   ]
 }
