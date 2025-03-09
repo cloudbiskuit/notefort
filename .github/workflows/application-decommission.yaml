@@ -35,6 +35,54 @@ jobs:
         run: |
           eksctl utils write-kubeconfig --region ${{ secrets.AWS_REGION }} --cluster ${{ vars.EKS_CLUSTER_NAME }}
 
+      - name: Delete Horizontal Pod Autoscalers 
+        run: |
+          kubectl delete hpa nodejsa-hpa -n default
+          kubectl delete hpa nodejsb-hpa -n default
+          
+      - name: Scale Down Nginx
+        run: |
+          kubectl scale deployment nginx --replicas=0 -n default
+
+      - name: Scale Down React
+        run: |
+          kubectl scale deployment react --replicas=0 -n default
+
+      - name: Dynamically fetch RabbitMQ Pod name and gracefully stop RabbitMQ
+        run: |
+          RABBITMQ_POD=$(kubectl get pods -n default -l app=rabbitmq -o jsonpath='{.items[0].metadata.name}')
+          kubectl exec -n default $RABBITMQ_POD -- rabbitmqctl stop_app
+          echo "RabbitMQ application stopped for graceful shutdown."
+
+      - name: Scale Down RabbitMQ
+        run: |
+          kubectl scale deployment rabbitmq --replicas=0 -n default    
+
+      - name: Scale Down Node.js Deployments  
+        run: |  
+          kubectl scale deployment nodejsa --replicas=0 -n default
+          kubectl scale deployment nodejsb --replicas=0 -n default
+
+      - name: Prepare MYSQL for Graceftul Shutdown
+        run: |
+          # Fetch MySQL root password from Kubernetes secret
+          MYSQL_ROOT_PASSWORD=$(kubectl get secret mysql-secrets -n default -o jsonpath='{.data.password}' | base64 --decode)
+
+          # Dynamically fetch MySQL Pod names and set them to read-only mode for graceful shutdown
+          MYSQLA_POD=$(kubectl get pods -n default -l app=mysqla -o jsonpath='{.items[0].metadata.name}')
+          MYSQLB_POD=$(kubectl get pods -n default -l app=mysqlb -o jsonpath='{.items[0].metadata.name}')
+
+          # Execute the MySQL commands using the root password
+          kubectl exec -n default $MYSQLA_POD -- mysql -u root -p"$MYSQL_ROOT_PASSWORD" -e "FLUSH TABLES WITH READ LOCK; SET GLOBAL read_only = 1;"
+          kubectl exec -n default $MYSQLB_POD -- mysql -u root -p"$MYSQL_ROOT_PASSWORD" -e "FLUSH TABLES WITH READ LOCK; SET GLOBAL read_only = 1;"
+
+          echo "MySQL instances set to read-only mode for graceful shutdown."
+
+      - name: Scale Down MySQL StatefulSets
+        run: |
+          kubectl scale statefulset mysqla --replicas=0 -n default
+          kubectl scale statefulset mysqlb --replicas=0 -n default
+
       - name: Uninstall Notefort Helm Chart
         run: |
           helm uninstall notefort --namespace default

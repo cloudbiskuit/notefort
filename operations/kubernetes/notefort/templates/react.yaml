@@ -32,7 +32,7 @@ spec:
             topologyKey: "kubernetes.io/hostname"
       containers:
       - name: react
-        image: {{ $.Values.awsAccountId }}.dkr.ecr.{{ $.Values.awsRegion }}.amazonaws.com/notefort-react:latest
+        image: {{ $.Values.awsAccountId }}.dkr.ecr.{{ $.Values.awsRegion }}.amazonaws.com/notefort-react:{{ $.Values.imageTag }}
         ports:
         - containerPort: 3000
 

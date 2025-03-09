@@ -32,7 +32,7 @@ spec:
             topologyKey: "kubernetes.io/hostname"
       containers:
       - name: nginx
-        image: {{ $.Values.awsAccountId }}.dkr.ecr.{{ $.Values.awsRegion }}.amazonaws.com/notefort-nginx:latest
+        image: {{ $.Values.awsAccountId }}.dkr.ecr.{{ $.Values.awsRegion }}.amazonaws.com/notefort-nginx:{{ $.Values.imageTag }}
 
         ports:
         - containerPort: 80

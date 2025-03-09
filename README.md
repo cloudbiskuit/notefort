@@ -125,7 +125,6 @@ To create the S3 bucket and the DynamoDB Table, from your system run `create-bac
    chmod +x create-backend-resources.sh
    ./create-backend-resources.sh
    ```
-Before running the script, ensure that AWS CLI is configured on your system.
 
 ### Prerequisites: HashiCorp Cloud Vault Secrets
 In HashiCorp Vault Cloud Secrets, Create a secret `MYSQL_PASSWORD`containing the MySQL database password. 
@@ -191,7 +190,7 @@ This workflow Installs the Helm Chart of the application. The `URL` will be prov
 **Note**: The Helm chart is ready for multiple instances of the application (e.g., development and production).
 
 ### Application - Decommission
-This workflow decommissions the application from the Kubernetes cluster.
+This workflow gracefully scales down and prepares services for removal, and it uninstalls the application from the Kubernetes cluster.
 
 ## Proof of Concept (PoC)
 This section provides a demonstration of Notefort successfully deployed on AWS EKS, confirming the end-to-end setup from infrastructure provisioning to application deployment.  

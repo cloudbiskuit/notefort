@@ -1,3 +1,6 @@
+awsAccountId: "<AWS_ACCOUNT_ID>"
+awsRegion: "<AWS_REGION>"
+ 
 mysqlInstances:
   - name: mysqla
     imageRepo: "notefort-mysqla"
@@ -7,10 +10,6 @@ mysqlInstances:
     imageRepo: "notefort-mysqlb"
     volumeClaim: "sqlb-vct"
     storageClass: "sqlb-sc"
-
-awsAccountId: "<AWS_ACCOUNT_ID>"
-awsRegion: "<AWS_REGION>"
-imageTag: "latest"
 
 nodejsServices:
   - name: nodejsa
