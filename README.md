@@ -125,6 +125,7 @@ To create the S3 bucket and the DynamoDB Table, from your system run `create-bac
    chmod +x create-backend-resources.sh
    ./create-backend-resources.sh
    ```
+Before running the script, ensure that AWS CLI is configured on your system.
 
 ### Prerequisites: HashiCorp Cloud Vault Secrets
 In HashiCorp Vault Cloud Secrets, Create a secret `MYSQL_PASSWORD`containing the MySQL database password. 

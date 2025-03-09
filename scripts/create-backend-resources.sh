@@ -10,9 +10,6 @@ UNIQUE_ID=$(uuidgen | tr '[:upper:]' '[:lower:]' | cut -c1-8)
 BUCKET_NAME="$BUCKET_NAME_PREFIX-$UNIQUE_ID"
 echo "Generated bucket name: $BUCKET_NAME"
 
-# Configure AWS CLI with assumed role (Ensure AWS CLI v2 is installed)
-aws configure set region $AWS_REGION
-
 # Create S3 Bucket
 aws s3api create-bucket \
   --bucket $BUCKET_NAME \
