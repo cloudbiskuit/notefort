@@ -125,6 +125,7 @@ To create the S3 bucket and the DynamoDB Table, from your system run `create-bac
    chmod +x create-backend-resources.sh
    ./create-backend-resources.sh
    ```
+Ensure AWC CLI is configured on your system before running this script.
 
 ### Prerequisites: HashiCorp Cloud Vault Secrets
 In HashiCorp Vault Cloud Secrets, Create a secret `MYSQL_PASSWORD`containing the MySQL database password. 
@@ -152,7 +153,9 @@ Ensure these Secrets are created before running the Github Actions Workflow.
 
 ## GitHub Workflows
 ### Artifacts - build
-This workflow creates AWS ECR registries, builds tags (commit hash+latest) and pushes the images to ECR.
+This workflow performs the following tasks:
+- Create AWS ECR registries if they do not already exist.
+- Build, tag (commit hash+latest), and push only the images whose source code has changed to ECR .
 
 ### Artifacts - Cleanup
 This workflow deletes the AWS ECR registries belonging to the application.
@@ -184,13 +187,20 @@ Additionaly, To delete the S3 bucket and the DynamoDB Table, from your system ru
    ./delete-backend-resources.sh
    ```
 
+Ensure AWC CLI is configured on your system before running this script.
+
 ### Application - Install
-This workflow Installs the Helm Chart of the application. The `URL` will be provided in the terminal output after the Workflow completes.
+This workflow Installs the application Helm chart. The `URL` will be provided in the terminal output after the Workflow completes.
 
 **Note**: The Helm chart is ready for multiple instances of the application (e.g., development and production).
 
 ### Application - Decommission
-This workflow gracefully scales down and prepares services for removal, and it uninstalls the application from the Kubernetes cluster.
+This workflow performs the following Steps:
+- Delete HPA to prevent it from scaling up Pods.
+- Scale down stateless services.
+- Gracefully stop RabbitMQ service.
+- Prepare MySql statefulsets for for graceful shutdown and scale them down.
+- Uninstall the application Helm chart.
 
 ## Proof of Concept (PoC)
 This section provides a demonstration of Notefort successfully deployed on AWS EKS, confirming the end-to-end setup from infrastructure provisioning to application deployment.  
