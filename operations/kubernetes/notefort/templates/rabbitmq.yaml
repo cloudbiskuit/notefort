@@ -23,7 +23,7 @@ spec:
                 - "true"
       containers:
       - name: rabbitmq
-        image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/notefort-rabbitmq:${IMAGE_TAG}
+        image: {{ $.Values.awsAccountId }}.dkr.ecr.{{ $.Values.awsRegion }}.amazonaws.com/notefort-rabbitmq:latest
         ports:
         - containerPort: 5672
         - containerPort: 15672

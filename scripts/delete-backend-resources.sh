@@ -15,6 +15,5 @@ aws dynamodb delete-table --table-name "${DYNAMODB_TABLE_NAME}"
 
 # Remove parameters from AWS Systems Manager (ASM)
 aws ssm delete-parameter --name "notefort-bucket-name"
-aws ssm delete-parameter --name "notefort-image-tag"
 
 echo "BACKEND RESOURCES DELETED SUCCESSFULLY"

@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: react  
+  name: nginx
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: react
+      app: nginx
   template:
     metadata:
       labels:
-        app: react
+        app: nginx
     spec:
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
             - matchExpressions:
-              - key: private
+              - key: public
                 operator: In
                 values:
                 - "true"
@@ -28,38 +28,39 @@ spec:
               - key: app
                 operator: In
                 values:
-                - react
+                - nginx
             topologyKey: "kubernetes.io/hostname"
       containers:
-      - name: react
-        image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/notefort-react:${IMAGE_TAG}
+      - name: nginx
+        image: {{ $.Values.awsAccountId }}.dkr.ecr.{{ $.Values.awsRegion }}.amazonaws.com/notefort-nginx:latest
+
         ports:
-        - containerPort: 3000
+        - containerPort: 80
 
         resources:
           requests:
-            cpu: "100m"      # 0.1 vCPU, React app doesn't need a lot of CPU
-            memory: "128Mi"  # 128MB RAM, React app usually stays small
+            cpu: "250m"      # 0.25 vCPU, minimal CPU load for serving static content
+            memory: "256Mi"  # 256MB RAM, enough for small static content
           limits:
-            cpu: "200m"      # 0.2 vCPU, enough for handling multiple concurrent users
-            memory: "256Mi"  # 256MB RAM, to handle any minor load spikes
+            cpu: "500m"      # 0.5 vCPU, allows for moderate traffic spikes
+            memory: "512Mi"  # 512MB RAM, accounts for larger traffic bursts
 
         livenessProbe:
           httpGet:
             path: /
-            port: 3000
+            port: 80
           initialDelaySeconds: 10
           periodSeconds: 30
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: react
+  name: nginx
 spec:
   selector:
-    app: react
+    app: nginx
   ports:
   - protocol: TCP
-    port: 3000
-    targetPort: 3000
-  type: ClusterIP
+    port: 80
+    targetPort: 80
+  type: LoadBalancer

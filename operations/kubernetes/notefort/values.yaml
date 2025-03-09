@@ -1,0 +1,38 @@
+mysqlInstances:
+  - name: mysqla
+    imageRepo: "notefort-mysqla"
+    volumeClaim: "sqla-vct"
+    storageClass: "sqla-sc"
+  - name: mysqlb
+    imageRepo: "notefort-mysqlb"
+    volumeClaim: "sqlb-vct"
+    storageClass: "sqlb-sc"
+
+awsAccountId: "<AWS_ACCOUNT_ID>"
+awsRegion: "<AWS_REGION>"
+imageTag: "latest"
+
+nodejsServices:
+  - name: nodejsa
+    port: 4000
+    imageRepo: "notefort-nodejsa"
+    dbHost: "mysqla"
+    dbName: "mysqla"
+    dbUser: "root"
+  - name: nodejsb
+    port: 5000
+    imageRepo: "notefort-nodejsb"
+    dbHost: "mysqlb"
+    dbName: "mysqlb"
+    dbUser: "root"
+
+services:
+  - name: mysqla
+    port: 3306
+  - name: mysqlb
+    port: 3306
+  - name: nodejsa
+    port: 4000
+  - name: nodejsb
+    port: 5000
+

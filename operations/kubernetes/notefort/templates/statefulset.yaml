@@ -1,0 +1,67 @@
+{{- range .Values.mysqlInstances }}
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .name }}
+spec:
+  serviceName: {{ .name }}
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .name }}
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: private
+                operator: In
+                values:
+                - "true"
+      containers:
+      - name: {{ .name }}
+        image: {{ $.Values.awsAccountId }}.dkr.ecr.{{ $.Values.awsRegion }}.amazonaws.com/{{ .imageRepo }}:{{ $.Values.imageTag }}
+        ports:
+        - containerPort: 3306
+        volumeMounts:
+        - name: {{ .volumeClaim }}
+          mountPath: /var/lib/mysql
+
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secrets
+              key: password
+
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+
+        livenessProbe:
+          exec:
+            command: ["mysqladmin", "ping", "-h", "localhost"]
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          
+  volumeClaimTemplates:
+  - metadata:
+      name: {{ .volumeClaim }}
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: {{ .storageClass }}
+{{- end }}

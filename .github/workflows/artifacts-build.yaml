@@ -29,38 +29,51 @@ jobs:
           aws ecr get-login-password --region ${{ secrets.AWS_REGION }} \
           | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
 
-      - name: Build Tag and Push All Images
+      - name: Fetch full history
+        run: git fetch --unshallow
+
+      - name: Get List of Changed Services
+        run: |
+          # Compare the ./application codebase between the last commit and the current commit
+          CHANGED_SERVICES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '^application/' | cut -d'/' -f2 | sort | uniq | tr '\n' ' ')
+          echo "Changed services: $CHANGED_SERVICES"
+          echo "changed_services=${CHANGED_SERVICES}" >> $GITHUB_ENV
+
+      - name: Build Tag and Push Changed Services ONLY
         run: |
           TAG=$(git rev-parse --short HEAD)
           PREFIX="notefort-"
-          
-          # Loop through Dockerfiles and build, tag and push images
-          find . -name 'Dockerfile' | while read DOCKERFILE; do
-            SERVICE_NAME=$(basename $(dirname $DOCKERFILE))
-            ECR_REPO_NAME="${PREFIX}${SERVICE_NAME}"
+          CHANGED_SERVICES="${{ env.changed_services }}"
+          LATEST_TAG="latest"
+
+          # Ensure CHANGED_SERVICES is not empty
+          if [[ -z "$CHANGED_SERVICES" ]]; then
+            echo "No services changed, skipping build."
+            exit 0
+          fi
+
+          # Loop through each service and build, tag, and push the Docker image
+          for SERVICE in $CHANGED_SERVICES; do
+            ECR_REPO_NAME="${PREFIX}${SERVICE}"
             IMAGE_NAME="$ECR_REPO_NAME"
             ECR_REPO_URL="${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/$ECR_REPO_NAME"
-            
+
+            # Check if repo exists, create if not
             if ! aws ecr describe-repositories --repository-names $ECR_REPO_NAME --region ${{ secrets.AWS_REGION }} > /dev/null 2>&1; then
               aws ecr create-repository --repository-name $ECR_REPO_NAME --region ${{ secrets.AWS_REGION }}
               echo "Repository $ECR_REPO_NAME created successfully"
-            else
-              echo "$Repository $ECR_REPO_NAME already exists"
             fi
-            
-            docker build -t $IMAGE_NAME:$TAG -f $DOCKERFILE $(dirname $DOCKERFILE)
+
+            # Build the Docker image
+            docker build -t $IMAGE_NAME:$TAG -t $IMAGE_NAME:$LATEST_TAG ./application/$SERVICE
+
+            # Tag the image
             docker tag "$IMAGE_NAME:$TAG" "$ECR_REPO_URL:$TAG"
+            docker tag "$IMAGE_NAME:$LATEST_TAG" "$ECR_REPO_URL:$LATEST_TAG"
+
+            # Push both tags
             docker push "$ECR_REPO_URL:$TAG"
-            echo "Image $IMAGE_NAME:$TAG pushed successfully"
+            docker push "$ECR_REPO_URL:$LATEST_TAG"
+
+            echo "Image $IMAGE_NAME:$TAG and $IMAGE_NAME:$LATEST_TAG pushed successfully"
           done
-
-          echo "IMAGES BUILT, TAGGED AND PUSHED TO ECR SUCCESSFULLY"
-
-      - name: Store Image Tag in ASM
-        run: | 
-          IMAGE_TAG_ASM_PARAMETER_NAME="notefort-image-tag"
-          TAG=$(git rev-parse --short HEAD)
-
-          aws ssm put-parameter --name $IMAGE_TAG_ASM_PARAMETER_NAME --value $TAG --type String --overwrite
-          
-          echo "IMAGE TAG $TAG STORED IN AWS SYSTEMS MANAGER SUCCESSFULLY"

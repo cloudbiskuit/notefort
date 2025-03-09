@@ -72,7 +72,7 @@ NOTEFORT is fully containerized with Docker:
 ## Terraform
 Infrastructure as Code (IaC) streamlines cloud infrastructure management by automating resource provisioning and configuration through code. It ensures consistency, reduces human error, and simplifies version control, making infrastructure changes auditable and repeatable. IaC enables faster deployment, scaling, and recovery while supporting collaborative development practices. 
 
-NOTEFORT AWS Infrastructure and EKS cluster are provisioned using Terraform.
+NOTEFORT AWS infrastructure and EKS are provisioned using Terraform modules.
 
 ## HashiCorp Cloud Vault
 HashiCorp Vault is a powerful tool for securely storing and accessing sensitive data such as API keys, database credentials, and other secrets. It provides centralized secret management, access control, and encryption, ensuring that applications can securely retrieve secrets without hardcoding them.
@@ -84,7 +84,7 @@ Kubernetes deployment offers scalable, automated, and resilient container orches
 
 With features like rolling updates, service discovery, and load balancing, Kubernetes simplifies application deployment and scaling. Additionally, its portability and integration with cloud-native environments make it ideal for managing complex, distributed applications across various cloud  environments.
 
-NOTEFORT application is deployed in a Kubernetes cluster.
+NOTEFORT is deployed in a Kubernetes cluster.
 
 ## Cluster Autoscaler
 The Cluster Autoscaler scales the number of nodes in the Kubernetes cluster. If there are not enough resources on existing nodes to schedule new pods, the Cluster Autoscaler can add new nodes to the cluster. Conversely, if nodes are underutilized and pods can be moved to other nodes, the Cluster Autoscaler will remove idle nodes to save costs. 
@@ -99,7 +99,7 @@ NOTEFORT leverages both HPA and VPA.
 ## Helm
 Helm is a package manager for Kubernetes that simplifies the deployment and management of applications by using Helm charts. It helps with versioning, rollbacks, and dependency management, making it easier to maintain and update applications in a Kubernetes cluster.
 
-NOTEFORT uses Helm Charts.
+NOTEFORT is installed using Helm Charts.
 
 ## Prometheus & Grafana
 Prometheus is an open-source monitoring and alerting toolkit designed for reliability and scalability. It collects and stores metrics in a time-series database, allowing for real-time monitoring of applications and infrastructure. Grafana is an open-source visualization and analytics platform that integrates with Prometheus to display the collected metrics in customizable, interactive dashboards. 
@@ -152,9 +152,7 @@ Ensure these Secrets are created before running the Github Actions Workflow.
 
 ## GitHub Workflows
 ### Artifacts - build
-This workflow creates AWS ECR registries, builds tags (commit hash) and pushes the images to ECR.
-
-**Note**: For simplicity, this workflow builds (same tag) all images in a single process. In a typical development setup, each image should be built (different tags) separately with its own workflow.
+This workflow creates AWS ECR registries, builds tags (commit hash+latest) and pushes the images to ECR.
 
 ### Artifacts - Cleanup
 This workflow deletes the AWS ECR registries belonging to the application.
@@ -167,7 +165,7 @@ This workflow performs the following jobs:
 - Install the Cluster Autoscaler, the Vertical Pod Autoscaler (VPA), and the Metrics Server in the EKS `kube-system` namespace.
 - Install Prometheus and its Adapter, and Grafana in the EKS `monitoring` namespace.
 
-**Note**: The code is ready for multiple environments (e.g., development and production), modify `dev.tfvars` and `prod.tfvars` as needed (e.g., instance type). Additionaly, modify `terraform apply` commands to account for `.tfvars` files.
+**Note**: The code is ready for multiple environments (e.g., development and production), modify `dev.tfvars` and `prod.tfvars` as needed (e.g., launch template instance type, node group desired min max). Additionaly, modify `terraform apply` commands to account for `.tfvars` files.
 
 **Note**: the IAM user defined in the GitHub Actions Variable `AWS_USER` will be mapped to the system:masters EKS RBAC group, granting them administrative privileges on the newly created cluster. As a result, `AWS_USER` will be able to view and manage the new EKS cluster in the AWS Console and from AWS CLI. 
 
@@ -186,10 +184,10 @@ Additionaly, To delete the S3 bucket and the DynamoDB Table, from your system ru
    ./delete-backend-resources.sh
    ```
 
-### Application - Deploy
-This workflow deploys the application Kubernetes manifest files. The `URL` will be provided in the terminal output after the Workflow completes.
+### Application - Install
+This workflow Installs the Helm Chart of the application. The `URL` will be provided in the terminal output after the Workflow completes.
 
-**Note**: For advanced engineers, refactor the Kubernetes manifests into Helm charts to make the application ready for multiple environments (e.g., development and production). Additionaly, Use Helm commands instead of applying manifests directly with kubectl.
+**Note**: The Helm chart is ready for multiple instances of the application (e.g., development and production).
 
 ### Application - Decommission
 This workflow decommissions the application from the Kubernetes cluster.
@@ -234,7 +232,11 @@ The following screenshots validate that the application is running as expected. 
 </div>  
 
 <div align="center">
-  <img src="./images/application-deploy.png" width="1000">
+  <img src="./images/application-install.png" width="1000">
+</div>  
+
+<div align="center">
+  <img src="./images/helm.png" width="1000">
 </div>  
 
 <div align="center">
