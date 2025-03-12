@@ -1,4 +1,3 @@
--- Initialization script for mysqlb database
 CREATE DATABASE IF NOT EXISTS mysqlb;
 
 USE mysqlb;

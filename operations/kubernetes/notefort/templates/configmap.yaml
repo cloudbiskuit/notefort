@@ -1,0 +1,10 @@
+{{- range .Values.mysqlInstances }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .name }}-init-script
+data:
+  init.sql: |
+    {{ .initScript | indent 4 }}
+{{- end }}

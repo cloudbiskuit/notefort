@@ -3,13 +3,14 @@ awsRegion: "<AWS_REGION>"
  
 mysqlInstances:
   - name: mysqla
-    imageRepo: "notefort-mysqla"
     volumeClaim: "sqla-vct"
     storageClass: "sqla-sc"
+    initScript: "init-mysqla.sql"
+
   - name: mysqlb
-    imageRepo: "notefort-mysqlb"
     volumeClaim: "sqlb-vct"
     storageClass: "sqlb-sc"
+    initScript: "init-mysqlb.sql"
 
 nodejsServices:
   - name: nodejsa

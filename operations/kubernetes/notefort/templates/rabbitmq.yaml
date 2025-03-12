@@ -23,21 +23,21 @@ spec:
                 - "true"
       containers:
       - name: rabbitmq
-        image: {{ $.Values.awsAccountId }}.dkr.ecr.{{ $.Values.awsRegion }}.amazonaws.com/notefort-rabbitmq:{{ $.Values.imageTag }}
+        image: rabbitmq:3-management
         ports:
         - containerPort: 5672
         - containerPort: 15672
         volumeMounts:
         - name: rbtvol
-          mountPath: /var/lib/rabbitmq # Path on the container for data storage
+          mountPath: /var/lib/rabbitmq 
 
         resources:
           requests:
-            cpu: "250m"      # 0.25 vCPU, enough for RabbitMQ message broker tasks
-            memory: "256Mi"  # 256MB RAM, enough for small-scale message handling
+            cpu: "250m"      
+            memory: "256Mi" 
           limits:
-            cpu: "500m"      # 0.5 vCPU, accommodates occasional processing peaks
-            memory: "512Mi"  # 512MB of RAM, for more queues and higher message volumes
+            cpu: "500m"      
+            memory: "512Mi"  
 
         livenessProbe:
           exec:
@@ -59,7 +59,7 @@ spec:
   resources:
     requests:
       storage: 1Gi
-  storageClassName: rbtvol-sc # Explicitly binds this PVC to the Storage Class named "rbtvol-sc"
+  storageClassName: rbtvol-sc 
 ---
 apiVersion: storage.k8s.io/v1
 kind: StorageClass

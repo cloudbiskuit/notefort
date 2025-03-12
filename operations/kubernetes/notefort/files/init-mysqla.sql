@@ -1,4 +1,3 @@
--- Initialization script for mysqla database
 CREATE DATABASE IF NOT EXISTS mysqla;
 
 USE mysqla;

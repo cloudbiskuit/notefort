@@ -18,52 +18,49 @@ spec:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
-            - matchExpressions:
-              - key: private
-                operator: In
-                values:
-                - "true"
+              - matchExpressions:
+                  - key: private
+                    operator: In
+                    values:
+                      - "true"
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchExpressions:
-              - key: app
-                operator: In
-                values:
-                - {{ .name }}
-            topologyKey: "kubernetes.io/hostname"
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - {{ .name }}
+              topologyKey: "kubernetes.io/hostname"
       containers:
-      - name: {{ .name }}
-        image: {{ $.Values.awsAccountId }}.dkr.ecr.{{ $.Values.awsRegion }}.amazonaws.com/{{ .imageRepo }}:{{ $.Values.imageTag }}
-        ports:
-        - containerPort: {{ .port }}
-        
-        env:
-        - name: RABBITMQ_HOST
-          value: "rabbitmq"
-        - name: DB_HOST
-          value: {{ .dbHost }}
-        - name: DB_NAME
-          value: {{ .dbName }}
-        - name: DB_USER
-          value: {{ .dbUser }}
-        - name: DB_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: mysql-secrets
-              key: password
-
-        resources:
-          requests:
-            cpu: "250m"
-            memory: "256Mi"
-          limits:
-            cpu: "500m"
-            memory: "512Mi"
-
-        livenessProbe:
-          tcpSocket:
-            port: {{ .port }}
-          initialDelaySeconds: 10
-          periodSeconds: 30
+        - name: {{ .name }}
+          image: {{ $.Values.awsAccountId }}.dkr.ecr.{{ $.Values.awsRegion }}.amazonaws.com/{{ .imageRepo }}:{{ $.Values.imageTag }}
+          ports:
+            - containerPort: {{ .port }}
+          env:
+            - name: RABBITMQ_HOST
+              value: "rabbitmq"
+            - name: DB_HOST
+              value: {{ .dbHost }}
+            - name: DB_NAME
+              value: {{ .dbName }}
+            - name: DB_USER
+              value: {{ .dbUser }}
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secrets
+                  key: password
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          livenessProbe:
+            tcpSocket:
+              port: {{ .port }}
+            initialDelaySeconds: 10
+            periodSeconds: 30
 {{- end }}

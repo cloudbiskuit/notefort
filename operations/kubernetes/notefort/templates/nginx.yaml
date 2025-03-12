@@ -32,18 +32,16 @@ spec:
             topologyKey: "kubernetes.io/hostname"
       containers:
       - name: nginx
-        image: {{ $.Values.awsAccountId }}.dkr.ecr.{{ $.Values.awsRegion }}.amazonaws.com/notefort-nginx:{{ $.Values.imageTag }}
-
+        image: nginx:1.23.3-alpine
         ports:
         - containerPort: 80
-
         resources:
           requests:
-            cpu: "250m"      # 0.25 vCPU, minimal CPU load for serving static content
-            memory: "256Mi"  # 256MB RAM, enough for small static content
+            cpu: "250m"     
+            memory: "256Mi"
           limits:
-            cpu: "500m"      # 0.5 vCPU, allows for moderate traffic spikes
-            memory: "512Mi"  # 512MB RAM, accounts for larger traffic bursts
+            cpu: "500m"
+            memory: "512Mi"
 
         livenessProbe:
           httpGet:
@@ -51,6 +49,46 @@ spec:
             port: 80
           initialDelaySeconds: 10
           periodSeconds: 30
+
+        volumeMounts:
+        - name: nginx-config-volume
+          mountPath: /etc/nginx/conf.d/default.conf
+          subPath: nginx.conf
+      volumes:
+      - name: nginx-config-volume
+        configMap:
+          name: nginx-config
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+data:
+  nginx.conf: |
+    server {
+        listen 80;
+        
+        location / {
+            proxy_pass http://react:3000;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection 'upgrade';
+            proxy_set_header Host $host;
+            proxy_cache_bypass $http_upgrade;
+        }
+
+        location /nodejsa/ {
+            proxy_pass http://nodejsa:4000/;
+            proxy_http_version 1.1;
+            proxy_set_header Host $host;
+        }
+
+        location /nodejsb/ {
+            proxy_pass http://nodejsb:5000/;
+            proxy_http_version 1.1;
+            proxy_set_header Host $host;
+        }
+    }
 ---
 apiVersion: v1
 kind: Service
