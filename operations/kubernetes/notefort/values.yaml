@@ -12,7 +12,6 @@ mysqlInstances:
           id INT AUTO_INCREMENT PRIMARY KEY,
           msg VARCHAR(255) NOT NULL
       );
-    imageRepo: "notefort-mysqla" 
   - name: mysqlb
     volumeClaim: "notefort-sqlb-vct"
     storageClass: "notefort-sqlb-sc"
@@ -24,7 +23,6 @@ mysqlInstances:
           ida INT NOT NULL,
           msgcp VARCHAR(255) NOT NULL
       );
-    imageRepo: "notefort-mysqlb" 
 
 nodejsServices:
   - name: nodejsa
