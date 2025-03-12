@@ -26,14 +26,9 @@ spec:
                 - "true"
       containers:
       - name: {{ .name }}
-        image: {{ $.Values.awsAccountId }}.dkr.ecr.{{ $.Values.awsRegion }}.amazonaws.com/{{ .imageRepo }}:{{ $.Values.imageTag }}
+        image: mysql:8.0
         ports:
         - containerPort: 3306
-        volumeMounts:
-        - name: {{ .volumeClaim }}
-          mountPath: /var/lib/mysql
-        - name: init-script
-          mountPath: /docker-entrypoint-initdb.d
         env:
         - name: MYSQL_ROOT_PASSWORD
           valueFrom:
@@ -52,6 +47,15 @@ spec:
             command: ["mysqladmin", "ping", "-h", "localhost"]
           initialDelaySeconds: 30
           periodSeconds: 30
+        volumeMounts:
+        - name: {{ .volumeClaim }}
+          mountPath: /var/lib/mysql
+        - name: init-script
+          mountPath: /docker-entrypoint-initdb.d
+      volumes:
+      - name: init-script
+        configMap:
+          name: {{ .name }}-init-script
           
   volumeClaimTemplates:
   - metadata:
@@ -63,9 +67,59 @@ spec:
         requests:
           storage: 1Gi
       storageClassName: {{ .storageClass }}
-  
-  volumes:
-  - name: init-script
-    configMap:
-      name: {{ .name }}-init-script
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .name }}-init-script
+data:
+  init.sql: |
+{{ .initScript | indent 4 }}
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: {{ .storageClass }}
+provisioner: kubernetes.io/aws-ebs
+parameters:
+  type: gp3
+  fsType: ext4
+  encrypted: "true"
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
+---
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: {{ .name }}-vpa
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: StatefulSet
+    name: {{ .name }}
+  updatePolicy:
+    updateMode: "Off"
+  resourcePolicy:
+    containerPolicies:
+    - containerName: {{ .name }}
+      minAllowed:
+        cpu: "125m"
+        memory: "128Mi"
+      maxAllowed:
+        cpu: "750m"
+        memory: "640Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .name }}
+spec:
+  selector:
+    app: {{ .name }}
+  ports:
+    - protocol: TCP
+      port: 3306
+      targetPort: 3306
+  type: ClusterIP
+---
 {{- end }}

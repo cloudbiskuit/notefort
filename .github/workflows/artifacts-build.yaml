@@ -61,7 +61,7 @@ jobs:
             # Check if repo exists, create if not
             if ! aws ecr describe-repositories --repository-names $ECR_REPO_NAME --region ${{ secrets.AWS_REGION }} > /dev/null 2>&1; then
               aws ecr create-repository --repository-name $ECR_REPO_NAME --region ${{ secrets.AWS_REGION }}
-              echo "Repository $ECR_REPO_NAME created successfully"
+              echo "REPOSITORY $ECR_REPO_NAME CREATED SUCCESSFULLY"
             fi
 
             # Build the Docker image
@@ -75,5 +75,5 @@ jobs:
             docker push "$ECR_REPO_URL:$TAG"
             docker push "$ECR_REPO_URL:$LATEST_TAG"
 
-            echo "Image $IMAGE_NAME:$TAG and $IMAGE_NAME:$LATEST_TAG pushed successfully"
+            echo "IMAGES $IMAGE_NAME:$TAG $IMAGE_NAME:$LATEST_TAG PUSHED SUCCESSFULLY"
           done

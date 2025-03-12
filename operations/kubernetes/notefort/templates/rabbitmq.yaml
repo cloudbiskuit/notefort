@@ -30,7 +30,6 @@ spec:
         volumeMounts:
         - name: rbtvol
           mountPath: /var/lib/rabbitmq 
-
         resources:
           requests:
             cpu: "250m"      
@@ -38,33 +37,33 @@ spec:
           limits:
             cpu: "500m"      
             memory: "512Mi"  
-
         livenessProbe:
           exec:
             command: ["rabbitmqctl", "node_health_check"]
           initialDelaySeconds: 20
           periodSeconds: 30
+          timeoutSeconds: 5
       volumes:
       - name: rbtvol
         persistentVolumeClaim:
-          claimName: rbtvol-pvc
+          claimName: notefort-rbtvol-pvc
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: rbtvol-pvc
+  name: notefort-rbtvol-pvc
 spec:
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 1Gi
-  storageClassName: rbtvol-sc 
+  storageClassName: notefort-rbtvol-sc 
 ---
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
-  name: rbtvol-sc
+  name: notefort-rbtvol-sc
 provisioner: kubernetes.io/aws-ebs
 parameters:
   type: gp3

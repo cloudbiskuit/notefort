@@ -163,6 +163,30 @@ resource "aws_security_group" "private_eks_worker_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  # rabbitmq
+  ingress {
+    from_port   = 5672
+    to_port     = 5672
+    protocol    = "tcp"
+    cidr_blocks = ["10.0.0.0/16"]
+  }
+
+  # mysql
+  ingress {
+    from_port   = 3306
+    to_port     = 3306
+    protocol    = "tcp"
+    cidr_blocks = ["10.0.0.0/16"]
+  }
+  
+  # rabbitmq management
+  ingress {
+    from_port   = 15672
+    to_port     = 15672
+    protocol    = "tcp"
+    cidr_blocks = ["10.0.0.0/16"]
+  }
+  
   # prometheus ui
   ingress {
     from_port   = 9090

@@ -38,11 +38,11 @@ spec:
 
         resources:
           requests:
-            cpu: "100m"      # 0.1 vCPU, React app doesn't need a lot of CPU
-            memory: "128Mi"  # 128MB RAM, React app usually stays small
+            cpu: "100m"
+            memory: "128Mi"
           limits:
-            cpu: "200m"      # 0.2 vCPU, enough for handling multiple concurrent users
-            memory: "256Mi"  # 256MB RAM, to handle any minor load spikes
+            cpu: "200m"
+            memory: "256Mi"
 
         livenessProbe:
           httpGet:

@@ -3,36 +3,39 @@ awsRegion: "<AWS_REGION>"
  
 mysqlInstances:
   - name: mysqla
-    volumeClaim: "sqla-vct"
-    storageClass: "sqla-sc"
-    initScript: "init-mysqla.sql"
-
+    volumeClaim: "notefort-sqla-vct"
+    storageClass: "notefort-sqla-sc"
+    initScript: |
+      CREATE DATABASE IF NOT EXISTS mysqla;
+      USE mysqla;
+      CREATE TABLE IF NOT EXISTS main (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          msg VARCHAR(255) NOT NULL
+      );
+    imageRepo: "notefort-mysqla" 
   - name: mysqlb
-    volumeClaim: "sqlb-vct"
-    storageClass: "sqlb-sc"
-    initScript: "init-mysqlb.sql"
+    volumeClaim: "notefort-sqlb-vct"
+    storageClass: "notefort-sqlb-sc"
+    initScript: |
+      CREATE DATABASE IF NOT EXISTS mysqlb;
+      USE mysqlb;
+      CREATE TABLE IF NOT EXISTS main (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          ida INT NOT NULL,
+          msgcp VARCHAR(255) NOT NULL
+      );
+    imageRepo: "notefort-mysqlb" 
 
 nodejsServices:
   - name: nodejsa
     port: 4000
-    imageRepo: "notefort-nodejsa"
     dbHost: "mysqla"
     dbName: "mysqla"
     dbUser: "root"
+    imageRepo: "notefort-nodejsa"
   - name: nodejsb
     port: 5000
-    imageRepo: "notefort-nodejsb"
     dbHost: "mysqlb"
     dbName: "mysqlb"
     dbUser: "root"
-
-services:
-  - name: mysqla
-    port: 3306
-  - name: mysqlb
-    port: 3306
-  - name: nodejsa
-    port: 4000
-  - name: nodejsb
-    port: 5000
-
+    imageRepo: "notefort-nodejsb"
