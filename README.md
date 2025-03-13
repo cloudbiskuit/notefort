@@ -5,11 +5,6 @@ No matter the size or complexity of your application, it should follow the desig
 
 My primary goal is to demonstrate my expertise in modern cloud architecture design and industry-standard deployment strategies.  
 
-## Bridging the Gap
-As a cloud engineer, building applications may seem outside the scope of infrastructure and systems management. However, a hands-on understanding of the application development process enables more effective collaboration with developers. You'll speak the language of developers, understand their challenges, and propose cloud solutions that integrate with the application's needs. 
-
-Building NOTEFORT reinforced my understanding of infrastructure from a developer’s perspective. It can do the same for you.
-
 ## Application Design
 NOTEFORT ensures availability of your notes through a decoupled backend microservices architecture even if individual services experience downtime.  
 
@@ -26,28 +21,6 @@ The application uses a React-based user interface for input, which is processed 
 - The React service triggers API calls.
 - RabbitMQ handles the messaging queue for backend microservices.
 - Only Backend services process input and store it in their corresponding databases.
-
-## Application Logic
-#### Service `REACT`
-1. On load, the react service calls the GET APIs of both nodejsa and nodejsb to display:
-   - Entries from the table main in mysqla.
-   - Entries from the table main in mysqlb.
-
-2. The react service provides a text input box and an "insert" button. When the "Insert" button is clicked:
-   - It calls the POST API of nodejsa to insert a new record into mysqla.
-   - It refreshes the UI by calling the GET APIs of both nodejsa and nodejsb to display the updated data.
-
-#### Service `NODEJSA`
-1. Inserts a new record into the main table of mysqla.
-2. Produces a message to the rabbitmq queue containing two values:
-   - The ID of the newly inserted record.
-   - The message content from the newly inserted record.
-
-#### Service `NODEJSB`
-1. Listens for messages from the rabbitmq queue produced by nodejsa.
-2. Upon receiving a message, it inserts a new record into the main table of mysqlb, where:
-   - The ID from the message is stored as ida.
-   - The message content from the message is stored as msgcp.
 
 ## Cloud Architecture
 Click on [this link](./images/architecture.jpeg) to to see the high-resolution version.
