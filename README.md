@@ -1,12 +1,11 @@
-# NOTEFORT: Cloud & DevOps Best Practices
+# NoteFort: Cloud & DevOps Best Practices
 
-## About 
-No matter the size or complexity of your application, it should follow the design and deployment principles of **NOTEFORT** ensuring scalability, resilience, and efficiency in the cloud.
+No matter the size or complexity of your application, it should follow the design and deployment principles of NoteFort to ensure scalability and resilience in the cloud.
 
-My primary goal is to demonstrate my expertise in modern cloud architecture design and industry-standard deployment strategies.  
+My primary goal is to demonstrate my expertise in cloud and DevOps.  
 
 ## Application Design
-NOTEFORT ensures availability of your notes through a decoupled backend microservices architecture even if individual services experience downtime.  
+NoteFort ensures availability of your notes through a decoupled backend microservices architecture even if individual services experience downtime.  
 
 The application uses a React-based user interface for input, which is processed by two Node.js backend services that communicate via RabbitMQ.
 
@@ -17,10 +16,9 @@ The application uses a React-based user interface for input, which is processed 
 </div>  
 
 ### Key Concepts
-- All frontend and API requests are routed and proxied through Nginx proxy server.
-- The React service triggers API calls.
+- API requests are routed and proxied through Nginx proxy server.
 - RabbitMQ handles the messaging queue for backend microservices.
-- Only Backend services process input and store it in their corresponding databases.
+- Backend services process input and store it in their corresponding databases.
 
 ## Cloud Architecture
 Click on [this link](./images/architecture.jpeg) to to see the high-resolution version.
@@ -32,52 +30,33 @@ Click on [this link](./images/architecture.jpeg) to to see the high-resolution v
 </p>
 
 ## Docker
-Containers encapsulate application code and dependencies, ensuring consistency across development, testing, and production environments. They offer portability, scalability, and resource efficiency, making it easier to deploy and manage microservices-based architectures like NOTEFORT in both local and cloud environments.
-
-NOTEFORT is fully containerized with Docker:
-
-- Frontend: `react` container Built with React.js, providing a simple interface for data input and visualization.
-- Backend: Two Node.js containers `nodejsa` and `nodejsb` with RESTful APIs.
-- Message Broker: `rabbitmq` container facilitates communication between the microservices.
-- Database: Each backend service has its own MySQL database container instance `mysqla` and `mysqlb`.
-- Reverse Proxy: `nginx` container Acts as a reverse proxy for the frontend.
+Containers encapsulate application code and dependencies, ensuring consistency and portability across development, testing, and production environments.
 
 ## Terraform
 Infrastructure as Code (IaC) streamlines cloud infrastructure management by automating resource provisioning and configuration through code. It ensures consistency, reduces human error, and simplifies version control, making infrastructure changes auditable and repeatable. IaC enables faster deployment, scaling, and recovery while supporting collaborative development practices. 
 
-NOTEFORT AWS infrastructure and EKS are provisioned using Terraform modules.
-
 ## HashiCorp Cloud Vault
 HashiCorp Vault is a powerful tool for securely storing and accessing sensitive data such as API keys, database credentials, and other secrets. It provides centralized secret management, access control, and encryption, ensuring that applications can securely retrieve secrets without hardcoding them.
-
-NOTEFORT utilizes HashiCorp Vault to securely manage and inject secrets into its Kubernetes environment.
 
 ## Kubernetes
 Kubernetes deployment offers scalable, automated, and resilient container orchestration for modern applications. It efficiently manages containerized workloads, automates resource allocation, and ensures high availability through self-healing mechanisms. 
 
 With features like rolling updates, service discovery, and load balancing, Kubernetes simplifies application deployment and scaling. Additionally, its portability and integration with cloud-native environments make it ideal for managing complex, distributed applications across various cloud  environments.
 
-NOTEFORT is deployed in a Kubernetes cluster.
-
 ## Cluster Autoscaler
 The Cluster Autoscaler scales the number of nodes in the Kubernetes cluster. If there are not enough resources on existing nodes to schedule new pods, the Cluster Autoscaler can add new nodes to the cluster. Conversely, if nodes are underutilized and pods can be moved to other nodes, the Cluster Autoscaler will remove idle nodes to save costs. 
 
-NOTEFORT uses the Kubernetes Cluster Autoscaler.
-
 ## VPA & HPA
-Vertical Pod Autoscaler (VPA) and Horizontal Pod Autoscaler (HPA) work together to optimize pod resource allocation and scaling. HPA adjusts the number of pod replicas based on CPU or memory utilization, ensuring optimal load distribution and availability. VPA, on the other hand, dynamically adjusts the resource requests and limits of individual pods based on usage, improving resource efficiency. 
-
-NOTEFORT leverages both HPA and VPA.
+Vertical Pod Autoscaler (VPA) and Horizontal Pod Autoscaler (HPA) work together to optimize pod resource allocation and scaling:  
+HPA adjusts the number of pod replicas based on CPU or memory utilization, ensuring optimal load distribution and availability.  
+VPA, on the other hand, dynamically adjusts the resource requests and limits of individual pods based on usage, improving resource efficiency. 
 
 ## Helm
 Helm is a package manager for Kubernetes that simplifies the deployment and management of applications by using Helm charts. It helps with versioning, rollbacks, and dependency management, making it easier to maintain and update applications in a Kubernetes cluster.
 
-NOTEFORT is installed using Helm Charts.
-
 ## Prometheus & Grafana
-Prometheus is an open-source monitoring and alerting toolkit designed for reliability and scalability. It collects and stores metrics in a time-series database, allowing for real-time monitoring of applications and infrastructure. Grafana is an open-source visualization and analytics platform that integrates with Prometheus to display the collected metrics in customizable, interactive dashboards. 
-
-NOTEFORT uses Grafana and Prometheus for custom metrics.
+Prometheus is an open-source monitoring and alerting toolkit designed for reliability and scalability. It collects and stores metrics in a time-series database, allowing for real-time monitoring of applications and infrastructure.  
+Grafana is an open-source visualization and analytics platform that integrates with Prometheus to display the collected metrics in customizable, interactive dashboards. 
 
 ## Getting Started
 This repository contains the application code, and the workflow to create ECR registries, build, and push images. Also, it contains Terraform files and Kubernetes manifests, and the workflows to provision AWS infrastructure, set up the EKS cluster, and deploy the application.
@@ -106,7 +85,7 @@ In HashiCorp Vault Cloud Secrets, Create a secret `MYSQL_PASSWORD`containing the
 This secret is securely stored in HCP and later fetched during deployment using Kubernetes Secret to inject the database password into Kubernetes MySQL StatefulSets `mysqla` and `mysqlb` and Kubernetes Node.js Deployments `nodejsa` and `nodejsb`. 
 
 ### Prerequisites: Forking the Repositoy
-Go to **notefort** repository page on GitHub and Click the "Fork" button at the top right of the page.
+Go to notefort repository page on GitHub and Click the "Fork" button at the top right of the page.
 
 ### Prerequisites: GitHub Actions Secrets 
 Forking does not copy Github Actions Secrets. Create the following Github Actions Secrets in the newly forked repository:
@@ -119,10 +98,8 @@ Forking does not copy Github Actions Secrets. Create the following Github Action
 - **HCP_CLIENT_SECRET**: The HCP service principal client secret.
 - **HCP_API_ENDPOINT**: The HCP API Endpoint URL for HashiCorp Cloud Platform (HCP) Vault Secrets.
 
-Additionally, create the following Github Actions Variables:
+Additionally, create the following Github Actions Variable:
 - **EKS_CLUSTER_NAME**: "notefort-cluster"
-
-Ensure these Secrets are created before running the Github Actions Workflow.
 
 ## GitHub Workflows
 ### Artifacts - build
@@ -136,7 +113,8 @@ This workflow deletes the AWS ECR registries belonging to the application.
 ### Infrastructure - Provision
 This workflow performs the following jobs:
 
-- Intialize Terraform state in the newly created bucket, and provision the AWS infrastructure and the EKS cluster resources.
+- Intialize Terraform state in the newly created bucket.
+- Provision the AWS infrastructure and the EKS cluster resources.
 - Map the IAM user to Kubernetes RBAC.
 - Install the Cluster Autoscaler, the Vertical Pod Autoscaler (VPA), and the Metrics Server in the EKS `kube-system` namespace.
 - Install Prometheus and its Adapter, and Grafana in the EKS `monitoring` namespace.
@@ -176,9 +154,7 @@ This workflow performs the following Steps:
 - Uninstall the application Helm chart.
 
 ## Proof of Concept (PoC)
-This section provides a demonstration of Notefort successfully deployed on AWS EKS, confirming the end-to-end setup from infrastructure provisioning to application deployment.  
-
-The following screenshots validate that the application is running as expected. Click on the image to to see the high-resolution version.
+This section provides a demonstration of Notefort successfully deployed on AWS EKS, confirming the end-to-end setup from infrastructure provisioning to application deployment. The following screenshots validate that the application is running as expected.
 
 <br>
 
@@ -279,9 +255,8 @@ The following screenshots validate that the application is running as expected. 
 </div>  
 
 ## Future Improvements (In Progress)
-- ArgoCD and Rollouts
-- Sonarqube 
-- Splunk
+- ArgoCD & ArgoRollouts
+- CICD Tests
 
 ## Contact
 [salim.zaza@outlook.com](mailto:salim.zaza@outlook.com)
