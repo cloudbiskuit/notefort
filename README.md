@@ -1,5 +1,4 @@
 # NoteFort: Cloud & DevOps Best Practices
-
 No matter the size or complexity of your application, it should follow the design and deployment principles of NoteFort to ensure scalability and resilience in the cloud.
 
 My primary goal is to demonstrate my expertise in cloud and DevOps.  
@@ -15,7 +14,7 @@ The application uses a React-based user interface for input, which is processed 
   <img src="./images/design.jpeg" alt="Notefort" width="500">
 </div>  
 
-### Key Concepts
+#### Key Concepts
 - API requests are routed and proxied through Nginx proxy server.
 - RabbitMQ handles the messaging queue for backend microservices.
 - Backend services process input and store it in their corresponding databases.
@@ -29,49 +28,36 @@ Click on [this link](./images/architecture.jpeg) to to see the high-resolution v
   </a>
 </p>
 
-## Docker
-Containers encapsulate application code and dependencies, ensuring consistency and portability across development, testing, and production environments.
-
-## Terraform
-Infrastructure as Code (IaC) streamlines cloud infrastructure management by automating resource provisioning and configuration through code. It ensures consistency, reduces human error, and simplifies version control, making infrastructure changes auditable and repeatable. IaC enables faster deployment, scaling, and recovery while supporting collaborative development practices. 
-
-## HashiCorp Cloud Vault
-HashiCorp Vault is a powerful tool for securely storing and accessing sensitive data such as API keys, database credentials, and other secrets. It provides centralized secret management, access control, and encryption, ensuring that applications can securely retrieve secrets without hardcoding them.
-
-## Kubernetes
-Kubernetes deployment offers scalable, automated, and resilient container orchestration for modern applications. It efficiently manages containerized workloads, automates resource allocation, and ensures high availability through self-healing mechanisms. 
-
+## DevOps Toolset
+- **Docker**: Containers encapsulate application code and dependencies, ensuring consistency and portability across development, testing, and production environments.
+- **Terraform**: Infrastructure as Code (IaC) streamlines cloud infrastructure management by automating resource provisioning and configuration through code. It ensures consistency, reduces human error, and simplifies version control, making infrastructure changes auditable and repeatable.  
+IaC enables faster deployment, scaling, and recovery while supporting collaborative development practices. 
+- **HashiCorp Cloud Vault**: HashiCorp Vault is a powerful tool for securely storing and accessing sensitive data such as API keys, database credentials, and other secrets. It provides centralized secret management, access control, and encryption, ensuring that applications can securely retrieve secrets without hardcoding them.
+- **Kubernetes**: Kubernetes deployment offers scalable, automated, and resilient container orchestration for modern applications. It efficiently manages containerized workloads, automates resource allocation, and ensures high availability through self-healing mechanisms.  
 With features like rolling updates, service discovery, and load balancing, Kubernetes simplifies application deployment and scaling. Additionally, its portability and integration with cloud-native environments make it ideal for managing complex, distributed applications across various cloud  environments.
-
-## Cluster Autoscaler
-The Cluster Autoscaler scales the number of nodes in the Kubernetes cluster. If there are not enough resources on existing nodes to schedule new pods, the Cluster Autoscaler can add new nodes to the cluster. Conversely, if nodes are underutilized and pods can be moved to other nodes, the Cluster Autoscaler will remove idle nodes to save costs. 
-
-## VPA & HPA
-Vertical Pod Autoscaler (VPA) and Horizontal Pod Autoscaler (HPA) work together to optimize pod resource allocation and scaling:  
+- **Helm**: Helm is a package manager for Kubernetes that simplifies the deployment and management of applications by using Helm charts. It helps with versioning, rollbacks, and dependency management, making it easier to maintain and update applications in a Kubernetes cluster.
+- **Cluster Autoscaler**: The Cluster Autoscaler scales the number of nodes in the Kubernetes cluster. If there are not enough resources on existing nodes to schedule new pods, the Cluster Autoscaler can add new nodes to the cluster.  
+Conversely, if nodes are underutilized and pods can be moved to other nodes, the Cluster Autoscaler will remove idle nodes to save costs. 
+- **VPA & HPA**: Vertical Pod Autoscaler (VPA) and Horizontal Pod Autoscaler (HPA) work together to optimize pod resource allocation and scaling:  
 HPA adjusts the number of pod replicas based on CPU or memory utilization, ensuring optimal load distribution and availability.  
 VPA, on the other hand, dynamically adjusts the resource requests and limits of individual pods based on usage, improving resource efficiency. 
-
-## Helm
-Helm is a package manager for Kubernetes that simplifies the deployment and management of applications by using Helm charts. It helps with versioning, rollbacks, and dependency management, making it easier to maintain and update applications in a Kubernetes cluster.
-
-## Prometheus & Grafana
-Prometheus is an open-source monitoring and alerting toolkit designed for reliability and scalability. It collects and stores metrics in a time-series database, allowing for real-time monitoring of applications and infrastructure.  
+- **Prometheus & Grafana**: Prometheus is an open-source monitoring and alerting toolkit designed for reliability and scalability. It collects and stores metrics in a time-series database, allowing for real-time monitoring of applications and infrastructure.  
 Grafana is an open-source visualization and analytics platform that integrates with Prometheus to display the collected metrics in customizable, interactive dashboards. 
 
-## Getting Started
+## Getting Started: Prerequisites
 This repository contains the application code, and the workflow to create ECR registries, build, and push images. Also, it contains Terraform files and Kubernetes manifests, and the workflows to provision AWS infrastructure, set up the EKS cluster, and deploy the application.
 
-### Prerequisites: AWS OIDC Provider  
+#### AWS OIDC Provider  
 You have to Setup AWS OIDC Provider and create an IAM role to be used by GitHub Actions to authenticate with AWS, refer to the [AWS OIDC Provider guide](https://aws.amazon.com/blogs/security/use-iam-roles-to-connect-github-actions-to-actions-in-aws) for detailed instructions. You can grant the IAM role used by GitHub Actions the AdministratorAccess IAM Policy, in a production environment adhere to the principle of least privilege.
 
-### Prerequisites: SSH Key Pair 
+#### SSH Key Pair 
 To generate and push to AWS the SSH pubic key required to SSH into EKS cluster public EC2 instances, from your system run `generate-ssh-keypair.sh` script:
    ```bash
    chmod +x generate-ssh-keypair.sh
    ./generate-ssh-keypair.sh
    ```
 
-### Prerequisites: Remote Backend Resources
+#### Remote Backend Resources
 To create the S3 bucket and the DynamoDB Table, from your system run `create-backend-resources.sh` script:
    ```bash
    chmod +x create-backend-resources.sh
@@ -79,15 +65,15 @@ To create the S3 bucket and the DynamoDB Table, from your system run `create-bac
    ```
 Ensure AWC CLI is configured on your system before running this script.
 
-### Prerequisites: HashiCorp Cloud Vault Secrets
+#### HashiCorp Cloud Vault Secrets
 In HashiCorp Vault Cloud Secrets, Create a secret `MYSQL_PASSWORD`containing the MySQL database password. 
 
 This secret is securely stored in HCP and later fetched during deployment using Kubernetes Secret to inject the database password into Kubernetes MySQL StatefulSets `mysqla` and `mysqlb` and Kubernetes Node.js Deployments `nodejsa` and `nodejsb`. 
 
-### Prerequisites: Forking the Repositoy
+#### Forking the Repositoy
 Go to notefort repository page on GitHub and Click the "Fork" button at the top right of the page.
 
-### Prerequisites: GitHub Actions Secrets 
+#### GitHub Actions Secrets 
 Forking does not copy Github Actions Secrets. Create the following Github Actions Secrets in the newly forked repository:
 
 - **AWS_ACCOUNT_ID**: The 12-digit AWS account number where the resources will be deployed.
@@ -101,16 +87,16 @@ Forking does not copy Github Actions Secrets. Create the following Github Action
 Additionally, create the following Github Actions Variable:
 - **EKS_CLUSTER_NAME**: "notefort-cluster"
 
-## GitHub Workflows
-### Artifacts - build
+## Go Live: GitHub Actions
+#### Artifacts - build
 This workflow performs the following tasks:
 - Create AWS ECR registries if they do not already exist.
 - Build, tag (commit hash+latest), and push only the images whose source code has changed to ECR .
 
-### Artifacts - Cleanup
+#### Artifacts - Cleanup
 This workflow deletes the AWS ECR registries belonging to the application.
 
-### Infrastructure - Provision
+#### Infrastructure - Provision
 This workflow performs the following jobs:
 
 - Intialize Terraform state in the newly created bucket.
@@ -129,7 +115,7 @@ This workflow performs the following jobs:
 
 **Note**: On your system, run the following command to port-forward to Prometheus: kubectl port-forward -n monitoring svc/prometheus-operated `port`:9090 where port is a free port on your local system. To access Prometheus UI on your system, go to: https://localhost:`port`
 
-### Infrastructure - Destroy
+#### Infrastructure - Destroy
 This workflow destroys the AWS infrastructure and the EKS cluster.
 
 Additionaly, To delete the S3 bucket and the DynamoDB Table, from your system run `delete-backend-resources.sh` script:
@@ -140,12 +126,12 @@ Additionaly, To delete the S3 bucket and the DynamoDB Table, from your system ru
 
 Ensure AWC CLI is configured on your system before running this script.
 
-### Application - Install
+#### Application - Install
 This workflow Installs the application Helm chart. The `URL` will be provided in the terminal output after the Workflow completes.
 
 **Note**: The Helm chart is ready for multiple instances of the application (e.g., development and production).
 
-### Application - Decommission
+#### Application - Decommission
 This workflow performs the following Steps:
 - Delete HPA to prevent it from scaling up Pods.
 - Scale down stateless services.
@@ -153,7 +139,7 @@ This workflow performs the following Steps:
 - Prepare MySql statefulsets for for graceful shutdown and scale them down.
 - Uninstall the application Helm chart.
 
-## Proof of Concept (PoC)
+## PoC
 This section provides a demonstration of Notefort successfully deployed on AWS EKS, confirming the end-to-end setup from infrastructure provisioning to application deployment. The following screenshots validate that the application is running as expected.
 
 <br>
