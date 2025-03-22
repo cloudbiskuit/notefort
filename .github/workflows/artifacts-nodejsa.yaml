@@ -1,0 +1,76 @@
+name: Artifacts - NodejsA
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'application/nodejsa/**'
+
+permissions:
+  id-token: write
+  contents: write
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    env:
+      IMAGE_NAME: notefort-nodejsa
+      ECR_REPO_URL: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/notefort-nodejsa
+      YAML_FILE: ./operations/kubernetes/notefort/values.yaml
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.GH_IAM_ROLE }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Authenticate Docker to ECR
+        run: |
+          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} \
+          | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+
+      - name: Check if ECR Repository Exists, Create if Not
+        run: |
+          if ! aws ecr describe-repositories --repository-names $IMAGE_NAME --region ${{ secrets.AWS_REGION }} > /dev/null 2>&1; then
+            aws ecr create-repository --repository-name $IMAGE_NAME --region ${{ secrets.AWS_REGION }}
+            echo "REPOSITORY $IMAGE_NAME CREATED SUCCESSFULLY"
+          fi
+
+      - name: Get short SHA
+        run: |  
+          echo "TAG=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: Build Docker Image
+        run: |
+          docker build -t ${{ env.IMAGE_NAME }}:${{ env.TAG }} ./application/nodejsa
+          echo "Built Docker image: ${{ env.IMAGE_NAME }}:${{ env.TAG }}"
+
+      - name: Tag Docker Image
+        run: |
+          docker tag "${{ env.IMAGE_NAME }}:${{ env.TAG }}" "${{ env.ECR_REPO_URL }}:${{ env.TAG }}"
+          docker tag "${{ env.IMAGE_NAME }}:${{ env.TAG }}" "${{ env.ECR_REPO_URL }}:latest"
+          echo "Tagged Docker image: ${{ env.ECR_REPO_URL }}:${{ env.TAG }} and ${{ env.ECR_REPO_URL }}:latest"
+
+      - name: Push Docker Image to ECR
+        run: |
+          docker push "${{ env.ECR_REPO_URL }}:${{ env.TAG }}"
+          docker push "${{ env.ECR_REPO_URL }}:latest"
+          echo "Pushed Docker images to ECR: ${{ env.ECR_REPO_URL }}:${{ env.TAG }} and ${{ env.ECR_REPO_URL }}:latest"
+
+      - name: Update Kubernetes YAML File with New Image Tag
+        run: |
+          echo "Updating Kubernetes YAML with image tag ${{ env.TAG }}"
+          sed -i '/- name: nodejsa/,/- name:/s/imageTag: .*/imageTag: '"${{ env.TAG }}"'/' ${{ env.YAML_FILE }}
+          cat ${{ env.YAML_FILE }}  # Output the updated YAML for debugging
+
+      - name: Commit and Push Updated YAML File to GitHub Repository
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add ${{ env.YAML_FILE }}
+          git commit -m "Update YAML file with new image tag: ${{ env.TAG }}"
+          git push

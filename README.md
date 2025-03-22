@@ -1,8 +1,8 @@
 ## About
-No matter the size or complexity of your enterprise application, you could follow the design and deployment principles of NoteFort to ensure scalability and resilience in the cloud.
+No matter the size of your enterprise application, you could benefit from the design and deployment principles of NoteFort to ensure scalability and resilience in the cloud.
 
-## Goal
-My primary goal is to demonstrate my expertise in cloud design and DevOps practices.  
+## Purpose
+My primary goal is to demonstrate my expertise in cloud design and DevOps best practices.  
 
 ## Description
 NoteFort ensures availability of your notes through a decoupled backend microservices architecture even if individual services experience downtime.  
@@ -46,7 +46,7 @@ VPA, on the other hand, dynamically adjusts the resource requests and limits of 
 - **Prometheus & Grafana**: Prometheus is an open-source monitoring and alerting toolkit designed for reliability and scalability. It collects and stores metrics in a time-series database, allowing for real-time monitoring of applications and infrastructure.  
 Grafana is an open-source visualization and analytics platform that integrates with Prometheus to display the collected metrics in customizable, interactive dashboards. 
 
-## Prerequisites
+## Try it Out: Prerequisites
 
 #### AWS OIDC Provider  
 You have to Setup AWS OIDC Provider and create an IAM role to be used by GitHub Actions to authenticate with AWS, refer to the [AWS OIDC Provider guide](https://aws.amazon.com/blogs/security/use-iam-roles-to-connect-github-actions-to-actions-in-aws) for detailed instructions. You can grant the IAM role used by GitHub Actions the AdministratorAccess IAM Policy, in a production environment adhere to the principle of least privilege.
@@ -88,11 +88,24 @@ Forking does not copy Github Actions Secrets. Create the following Github Action
 Additionally, create the following Github Actions Variable:
 - **EKS_CLUSTER_NAME**: "notefort-cluster"
 
-## Go Live
-#### Artifacts - build
+## Try it Out: Go Live
+#### Artifacts - React
 This workflow performs the following tasks:
-- Create AWS ECR registries if they do not already exist.
-- Build, tag (commit hash+latest), and push only the images whose source code has changed to ECR .
+- Create AWS ECR notefort-react registry if it does not already exist.
+- Build, tag (commit hash + latest), and push the image to AWS ECR Registry.
+- Replace the image tag in the react.yaml Kubernetes deployment file with the latest commit hash, and commit the updated file to the GitHub repository.
+
+#### Artifacts - NodejsA
+This workflow performs the following tasks:
+- Create AWS ECR notefort-nodejsa registry if it does not already exist.
+- Build, tag (commit hash + latest), and push the image to AWS ECR Registry.
+- Replace the image tag of nodejsa in the values.yaml Kubernetes Helm file with the latest commit hash, and commit the updated file to the GitHub repository.
+
+#### Artifacts - NodejsB
+This workflow performs the following tasks:
+- Create AWS ECR notefort-nodejsb registry if it does not already exist.
+- Build, tag (commit hash + latest), and push the image to AWS ECR Registry.
+- Replace the image tag of nodejsb in the values.yaml Kubernetes Helm file with the latest commit hash, and commit the updated file to the GitHub repository.
 
 #### Artifacts - Cleanup
 This workflow deletes the AWS ECR registries belonging to the application.

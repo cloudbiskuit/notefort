@@ -1,6 +1,6 @@
 awsAccountId: "<AWS_ACCOUNT_ID>"
 awsRegion: "<AWS_REGION>"
- 
+
 mysqlInstances:
   - name: mysqla
     volumeClaim: "notefort-sqla-vct"
@@ -31,9 +31,11 @@ nodejsServices:
     dbName: "mysqla"
     dbUser: "root"
     imageRepo: "notefort-nodejsa"
+    imageTag: ffbf0de
   - name: nodejsb
     port: 5000
     dbHost: "mysqlb"
     dbName: "mysqlb"
     dbUser: "root"
     imageRepo: "notefort-nodejsb"
+    imageTag: c960d62

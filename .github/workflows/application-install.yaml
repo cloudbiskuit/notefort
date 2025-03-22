@@ -74,8 +74,7 @@ jobs:
         run: |
           helm upgrade --install notefort ./operations/kubernetes/notefort \
             --set awsAccountId=${{ secrets.AWS_ACCOUNT_ID }} \
-            --set awsRegion=${{ secrets.AWS_REGION }} \
-            --set imageTag="latest"
+            --set awsRegion=${{ secrets.AWS_REGION }}
 
       - name: Fetch Load Balancer URL
         run: |

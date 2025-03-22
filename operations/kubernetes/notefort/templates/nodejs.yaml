@@ -34,7 +34,7 @@ spec:
               topologyKey: "kubernetes.io/hostname"
       containers:
         - name: {{ .name }}
-          image: {{ $.Values.awsAccountId }}.dkr.ecr.{{ $.Values.awsRegion }}.amazonaws.com/{{ .imageRepo }}:{{ $.Values.imageTag }}
+          image: {{ $.Values.awsAccountId }}.dkr.ecr.{{ $.Values.awsRegion }}.amazonaws.com/{{ .imageRepo }}:{{ .imageTag }}
           ports:
             - containerPort: {{ .port }}
           env:
