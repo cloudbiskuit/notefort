@@ -167,7 +167,15 @@ Here's a demonstration of Notefort successfully deployed on AWS EKS and running 
 </div>  
 
 <div align="center">
-  <img src="./images/artifacts-build.png" width="1000">
+  <img src="./images/artifacts-react.png" width="1000">
+</div>  
+
+<div align="center">
+  <img src="./images/artifacts-nodejsa.png" width="1000">
+</div>  
+
+<div align="center">
+  <img src="./images/artifacts-nodejsb.png" width="1000">
 </div>  
 
 <div align="center">
