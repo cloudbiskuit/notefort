@@ -8,7 +8,7 @@ My primary goal is to demonstrate my expertise in cloud, DevOps and GitOps best 
 NoteFort ensures availability of your notes through a decoupled backend microservices architecture even if individual services experience downtime.  
 
 ## Design
-The application uses a React-based user interface for input, which is processed by two Node.js backend services that communicate via RabbitMQ.
+The application has a React frontend and two Express.js backend services that communicate via RabbitMQ.
 
 <br>
 
@@ -31,21 +31,16 @@ Click on [this link](./images/architecture.jpeg) to to see the high-resolution v
 </p>
 
 ## Toolset
-- **Docker**: Containers encapsulate application code and dependencies, ensuring consistency and portability across development, testing, and production environments.
-- **Terraform**: Infrastructure as Code (IaC) streamlines cloud infrastructure management by automating resource provisioning and configuration through code. It ensures consistency, reduces human error, and simplifies version control, making infrastructure changes auditable and repeatable.  
-IaC enables faster deployment, scaling, and recovery while supporting collaborative development practices. 
-- **HashiCorp Cloud Vault**: HashiCorp Vault is a powerful tool for securely storing and accessing sensitive data such as API keys, database credentials, and other secrets. It provides centralized secret management, access control, and encryption, ensuring that applications can securely retrieve secrets without hardcoding them.
-- **Kubernetes**: Kubernetes deployment offers scalable, automated, and resilient container orchestration for modern applications. It efficiently manages containerized workloads, automates resource allocation, and ensures high availability through self-healing mechanisms.  
-With features like rolling updates, service discovery, and load balancing, Kubernetes simplifies application deployment and scaling. Additionally, its portability and integration with cloud-native environments make it ideal for managing complex, distributed applications across various cloud  environments.
-- **Helm**: Helm is a package manager for Kubernetes that simplifies the deployment and management of applications by using Helm charts. It helps with versioning, rollbacks, and dependency management, making it easier to maintain and update applications in a Kubernetes cluster.
-- **Cluster Autoscaler**: The Cluster Autoscaler scales the number of nodes in the Kubernetes cluster. If there are not enough resources on existing nodes to schedule new pods, the Cluster Autoscaler can add new nodes to the cluster.  
-Conversely, if nodes are underutilized and pods can be moved to other nodes, the Cluster Autoscaler will remove idle nodes to save costs. 
-- **VPA & HPA**: Vertical Pod Autoscaler (VPA) and Horizontal Pod Autoscaler (HPA) work together to optimize pod resource allocation and scaling:  
-HPA adjusts the number of pod replicas based on CPU or memory utilization, ensuring optimal load distribution and availability.  
-VPA, on the other hand, dynamically adjusts the resource requests and limits of individual pods based on usage, improving resource efficiency. 
-- **Prometheus & Grafana**: Prometheus is an open-source monitoring and alerting toolkit designed for reliability and scalability. It collects and stores metrics in a time-series database, allowing for real-time monitoring of applications and infrastructure.  
-Grafana is an open-source visualization and analytics platform that integrates with Prometheus to display the collected metrics in customizable, interactive dashboards.  
-- **ArgoCD**: ArgoCD is a declarative, GitOps-based continuous delivery tool for Kubernetes. It automates application deployment by syncing the desired state from a Git repository to a Kubernetes cluster, ensuring consistency and version control.
+- Github Actions
+- Docker
+- Terraform
+- HashiCorp Cloud Vault
+- Kubernetes
+- Helm
+- K8S Autoscaler, VPA & HPA
+- Prometheus & Grafana
+- Skaffold
+- ArgoCD
 
 ## Try it Out: Prerequisites
 
@@ -153,17 +148,11 @@ This workflow performs the following Steps:
 - Delete ArgoCD NoteFort Application.
 
 ## How to Access Prometheus, Grafana and ArgoCD
-Prometheus:  
-Follow the instructions provided in the workflow output to get the username/password, and to port-forward a tunnel to Prometheus.  
-To access Prometheus UI on your system, go to: https://localhost:`port`
+Prometheus: Follow the instructions provided in the workflow output to get the username/password, and to port-forward a tunnel to Prometheus. To access Prometheus UI on your system, go to: https://localhost:`port`
 
-Grafana:  
-Follow the instructions provided in the workflow output to get the username/password, and to port-forward a tunnel to Grafana.  
-To access Grafana UI on your system, go to: https://localhost:`port`
+Grafana: Follow the instructions provided in the workflow output to get the username/password, and to port-forward a tunnel to Grafana. To access Grafana UI on your system, go to: https://localhost:`port`
 
-ArgoCD:  
-Follow the instructions provided in the workflow output to get the username/password, and to port-forward a tunnel to ArgoCD.  
-To access ArgoCD UI on your system, go to: https://localhost:`port`
+ArgoCD: Follow the instructions provided in the workflow output to get the username/password, and to port-forward a tunnel to ArgoCD. To access ArgoCD UI on your system, go to: https://localhost:`port`
 
 ## PoC
 Here's a demonstration of Notefort successfully deployed on AWS EKS and running as expected, confirming the end-to-end setup from infrastructure provisioning to application deployment.
