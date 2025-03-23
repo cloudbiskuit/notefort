@@ -8,7 +8,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: "https://github.com/${GH_ACCOUNT}/notefortdev.git"
+    repoURL: "https://github.com/${GH_ACCOUNT}/notefort.git"
     targetRevision: HEAD
     path: operations/kubernetes/notefort
     helm:
