@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: notefort
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: "https://github.com/${GH_ACCOUNT}/notefortdev.git"
+    targetRevision: HEAD
+    path: operations/kubernetes/notefort
+    helm:
+      parameters:
+        - name: awsAccountId
+          value: "${AWS_ACCOUNT_ID}"
+        - name: awsRegion
+          value: "${AWS_REGION}"
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

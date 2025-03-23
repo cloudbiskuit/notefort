@@ -83,7 +83,15 @@ jobs:
           kubectl scale statefulset mysqla --replicas=0 -n default
           kubectl scale statefulset mysqlb --replicas=0 -n default
 
-      - name: Uninstall Notefort Helm Chart
+      - name: Substitute Environment Variables in Application YAML
         run: |
-          helm uninstall notefort --namespace default
-          echo "NOTEFORT HELM UNINSTALLATION COMPLETED"
+          export AWS_ACCOUNT_ID="${{ secrets.AWS_ACCOUNT_ID }}"
+          export AWS_REGION="${{ secrets.AWS_REGION }}"
+          export GH_ACCOUNT="${{ secrets.GH_ACCOUNT }}"
+
+          envsubst < ./operations/argocd/applications/application.yaml > application-temp.yaml
+          cat 
+
+      - name: Delete ArgoCD Application
+        run: |
+          kubectl delete -f application-temp.yaml -n argocd

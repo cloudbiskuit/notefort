@@ -70,11 +70,18 @@ jobs:
             echo "Secret 'mysql-secrets' already exists. Skipping creation."
           fi
 
-      - name: Install Notefort Helm Chart
+      - name: Substitute Environment Variables in Application YAML
         run: |
-          helm upgrade --install notefort ./operations/kubernetes/notefort \
-            --set awsAccountId=${{ secrets.AWS_ACCOUNT_ID }} \
-            --set awsRegion=${{ secrets.AWS_REGION }}
+          export AWS_ACCOUNT_ID="${{ secrets.AWS_ACCOUNT_ID }}"
+          export AWS_REGION="${{ secrets.AWS_REGION }}"
+          export GH_ACCOUNT="${{ secrets.GH_ACCOUNT }}"
+
+          envsubst < ./operations/argocd/applications/application.yaml > application-temp.yaml
+          cat 
+
+      - name: Create ArgoCD Application
+        run: |
+          kubectl apply -f application-temp.yaml -n argocd
 
       - name: Fetch Load Balancer URL
         run: |

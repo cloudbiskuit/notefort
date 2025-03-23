@@ -2,7 +2,7 @@
 No matter the size of your enterprise application, you could benefit from the design and deployment principles of NoteFort to ensure scalability and resilience in the cloud.
 
 ## Purpose
-My primary goal is to demonstrate my expertise in cloud design and DevOps best practices.  
+My primary goal is to demonstrate my expertise in cloud, DevOps and GitOps best practices.  
 
 ## Description
 NoteFort ensures availability of your notes through a decoupled backend microservices architecture even if individual services experience downtime.  
@@ -44,7 +44,8 @@ Conversely, if nodes are underutilized and pods can be moved to other nodes, the
 HPA adjusts the number of pod replicas based on CPU or memory utilization, ensuring optimal load distribution and availability.  
 VPA, on the other hand, dynamically adjusts the resource requests and limits of individual pods based on usage, improving resource efficiency. 
 - **Prometheus & Grafana**: Prometheus is an open-source monitoring and alerting toolkit designed for reliability and scalability. It collects and stores metrics in a time-series database, allowing for real-time monitoring of applications and infrastructure.  
-Grafana is an open-source visualization and analytics platform that integrates with Prometheus to display the collected metrics in customizable, interactive dashboards. 
+Grafana is an open-source visualization and analytics platform that integrates with Prometheus to display the collected metrics in customizable, interactive dashboards.  
+- **ArgoCD**: ArgoCD is a declarative, GitOps-based continuous delivery tool for Kubernetes. It automates application deployment by syncing the desired state from a Git repository to a Kubernetes cluster, ensuring consistency and version control.
 
 ## Try it Out: Prerequisites
 
@@ -79,6 +80,7 @@ Forking does not copy Github Actions Secrets. Create the following Github Action
 
 - **AWS_ACCOUNT_ID**: The 12-digit AWS account number where the resources will be deployed.
 - **AWS_REGION**: The AWS region (e.g., us-east-1) where the infrastructure will be provisioned.
+- **GH_ACCOUNT**: You GitHub account name.
 - **GH_IAM_ROLE**: The name of the IAM role you created in the Prerequisites step.
 - **AWS_USER**: The IAM user to be given administrative priviliges on the EKS cluster, this user will be able to view and manage the new EKS cluster in the AWS Console and from AWS CLI. 
 - **HCP_CLIENT_ID**: The HCP service principal client ID.
@@ -116,18 +118,15 @@ This workflow performs the following jobs:
 - Intialize Terraform state in the newly created bucket.
 - Provision the AWS infrastructure and the EKS cluster resources.
 - Map the IAM user to Kubernetes RBAC.
-- Install the Cluster Autoscaler, the Vertical Pod Autoscaler (VPA), and the Metrics Server in the EKS `kube-system` namespace.
-- Install Prometheus and its Adapter, and Grafana in the EKS `monitoring` namespace.
+- Install the Cluster Autoscaler, the Vertical Pod Autoscaler (VPA), and the Metrics Server in the EKS `kube-system` namespace via Helm.
+- Install Prometheus and its Adapter, and Grafana in the EKS `monitoring` namespace via Helm.
+- Install ArgoCD via Helm.
 
-Note: The code is ready for multiple environments (e.g., development and production), modify `dev.tfvars` and `prod.tfvars` as needed (e.g., launch template instance type, node group desired min max). Additionaly, modify `terraform apply` commands to account for `.tfvars` files.
+The Terraform directory structure is ready for multiple environments (e.g., development and production), modify `dev.tfvars` and `prod.tfvars` as needed (e.g., launch template instance type, node group desired min max). Additionaly, modify `terraform apply` commands to account for `.tfvars` files.
 
-Note: the IAM user defined in the GitHub Actions Variable `AWS_USER` will be mapped to the system:masters EKS RBAC group, granting them administrative privileges on the newly created cluster. As a result, `AWS_USER` will be able to view and manage the new EKS cluster in the AWS Console and from AWS CLI. 
+The IAM user defined in the GitHub Actions Variable `AWS_USER` will be mapped to the system:masters EKS RBAC group, granting them administrative privileges on the newly created cluster. As a result, `AWS_USER` will be able to view and manage the new EKS cluster in the AWS Console and from AWS CLI. 
 
-Note: The necessary IAM permissions for the Cluster Autoscaler to modify EKS node groups have already been accounted for by attaching a managed IAM policy to the IAM role associated with the node groups.
-
-Note: Follow the instructions provided in the workflow output to get Grafana password, and to port-forward a tunnel to Grafana. To access Grafana UI on your system, go to: https://localhost:3000
-
-Note: On your system, run the following command to port-forward to Prometheus: kubectl port-forward -n monitoring svc/prometheus-operated `port`:9090 where port is a free port on your local system. To access Prometheus UI on your system, go to: https://localhost:`port`
+The necessary IAM permissions for the Cluster Autoscaler to modify EKS node groups have already been accounted for by attaching a managed IAM policy to the IAM role associated with the node groups.
 
 #### Infrastructure - Destroy
 This workflow destroys the AWS infrastructure and the EKS cluster.
@@ -141,7 +140,7 @@ Additionaly, To delete the S3 bucket and the DynamoDB Table, from your system ru
 Ensure AWC CLI is configured on your system before running this script.
 
 #### Application - Install
-This workflow Installs the application Helm chart. The `URL` will be provided in the terminal output after the Workflow completes.
+This workflow Creates an ArgoCD Application using NoteFort Helm chart. After the Workflow completes, the `URL` will be provided in the terminal output.
 
 Note: The Helm chart is ready for multiple instances of the application (e.g., development and production).
 
@@ -151,16 +150,25 @@ This workflow performs the following Steps:
 - Scale down stateless services.
 - Gracefully stop RabbitMQ service.
 - Prepare MySql statefulsets for for graceful shutdown and scale them down.
-- Uninstall the application Helm chart.
+- Delete ArgoCD NoteFort Application.
+
+## How to Access Prometheus, Grafana and ArgoCD
+Prometheus:  
+Follow the instructions provided in the workflow output to get the username/password, and to port-forward a tunnel to Prometheus.  
+To access Prometheus UI on your system, go to: https://localhost:`port`
+
+Grafana:  
+Follow the instructions provided in the workflow output to get the username/password, and to port-forward a tunnel to Grafana.  
+To access Grafana UI on your system, go to: https://localhost:`port`
+
+ArgoCD:  
+Follow the instructions provided in the workflow output to get the username/password, and to port-forward a tunnel to ArgoCD.  
+To access ArgoCD UI on your system, go to: https://localhost:`port`
 
 ## PoC
 Here's a demonstration of Notefort successfully deployed on AWS EKS and running as expected, confirming the end-to-end setup from infrastructure provisioning to application deployment.
 
 <br>
-
-<div align="center">
-  <img src="./images/backend-create.png" width="1000">
-</div>  
 
 <div align="center">
   <img src="./images/workflows.png" width="1000">
@@ -199,11 +207,11 @@ Here's a demonstration of Notefort successfully deployed on AWS EKS and running 
 </div>  
 
 <div align="center">
-  <img src="./images/application-install.png" width="1000">
+  <img src="./images/argocd-setup.png" width="1000">
 </div>  
 
 <div align="center">
-  <img src="./images/helm.png" width="1000">
+  <img src="./images/application-install.png" width="1000">
 </div>  
 
 <div align="center">
@@ -216,6 +224,14 @@ Here's a demonstration of Notefort successfully deployed on AWS EKS and running 
 
 <div align="center">
   <img src="./images/artifacts-cleanup.png" width="1000">
+</div>  
+
+<div align="center">
+  <img src="./images/backend-create.png" width="1000">
+</div>  
+
+<div align="center">
+  <img src="./images/helm.png" width="1000">
 </div>  
 
 <div align="center">
@@ -262,8 +278,11 @@ Here's a demonstration of Notefort successfully deployed on AWS EKS and running 
   <img src="./images/grafana.png" width="1000">
 </div>  
 
-## Future Improvements
-- ArgoCD & ArgoRollouts
+<div align="center">
+  <img src="./images/argocd.png" width="1000">
+</div>  
+
+<br>
 
 ## Contact
 [salim.zaza@outlook.com](mailto:salim.zaza@outlook.com)
