@@ -182,7 +182,7 @@ Here's a demonstration of Notefort successfully deployed on AWS EKS and running 
 <br>
 
 <div align="center">
-  <img src="./images/workflows.png" width="1000">
+  <img src="./images/backend-create.png" width="1000">
 </div>  
 
 <div align="center">
@@ -238,15 +238,11 @@ Here's a demonstration of Notefort successfully deployed on AWS EKS and running 
 </div>  
 
 <div align="center">
-  <img src="./images/backend-create.png" width="1000">
+  <img src="./images/backend-delete.png" width="1000">
 </div>  
 
 <div align="center">
   <img src="./images/helm.png" width="1000">
-</div>  
-
-<div align="center">
-  <img src="./images/backend-delete.png" width="1000">
 </div>  
 
 <div align="center">
