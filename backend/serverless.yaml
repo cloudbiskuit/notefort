@@ -1,0 +1,69 @@
+service: backend
+
+provider:
+  name: aws
+  runtime: python3.9
+  region: us-east-1
+  environment:
+    AUTH0_DOMAIN: ${env:AUTH0_DOMAIN}   # Set in GitHub Actions Secrets
+    AUTH0_API_IDENTIFIER: "https://temp-placeholder.com"   # Set in GitHub Actions Workflow
+
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:CreateBucket
+        - s3:ListBucket
+        - s3:PutBucketTagging
+        - s3:PutBucketPublicAccessBlock
+        - ssm:PutParameter
+        - dynamodb:CreateTable
+      Resource:
+        - arn:aws:s3:::*
+        - arn:aws:ssm:us-east-1:*:parameter/notefort-bucket-name
+        - arn:aws:dynamodb:us-east-1:*:table/notefort-locks
+
+    - Effect: Allow
+      Action:
+        - s3:DeleteBucket
+        - s3:ListBucket
+        - s3:DeleteBucketPolicy
+        - ssm:GetParameter
+        - dynamodb:DeleteTable
+      Resource:
+        - arn:aws:s3:::*
+        - arn:aws:ssm:us-east-1:*:parameter/notefort-bucket-name
+        - arn:aws:dynamodb:us-east-1:*:table/notefort-locks
+
+  httpApi:
+    authorizers:
+      Auth0Authorizer:
+        identitySource: "$request.header.Authorization"
+        issuerUrl: "https://${self:provider.environment.AUTH0_DOMAIN}/"
+        audience:
+          - ${self:provider.environment.AUTH0_API_IDENTIFIER}
+
+functions:
+  createBackendResources:
+    handler: handler.create_backend_resources
+    events:
+      - httpApi:
+          path: /create-backend
+          method: post
+          authorizer: Auth0Authorizer
+    
+  deleteBackendResources:
+    handler: handler.delete_backend_resources
+    events:
+      - httpApi:
+          path: /delete-backend
+          method: post
+          authorizer: Auth0Authorizer
+
+plugins:
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: true
+
+

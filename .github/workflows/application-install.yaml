@@ -36,7 +36,7 @@ jobs:
 
       - name: Set up Kubeconfig
         run: |
-          eksctl utils write-kubeconfig --region ${{ secrets.AWS_REGION }} --cluster ${{ vars.EKS_CLUSTER_NAME }}
+          eksctl utils write-kubeconfig --region ${{ secrets.AWS_REGION }} --cluster ${{ secrets.EKS_CLUSTER_NAME }}
 
       - name: Authenticate with HashiCorp Cloud & Fetch Secrets from HCP Vault
         run: |

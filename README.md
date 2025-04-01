@@ -2,12 +2,9 @@
 No matter the size of your enterprise application, you could benefit from the design and deployment principles of NoteFort to ensure scalability and resilience in the cloud.
 
 ## Purpose
-My primary goal is to demonstrate my expertise in cloud, DevOps and GitOps best practices.  
+I have created a simple microservices application, NoteFort, to serve as a demo-app for showcasing my expertise in Cloud, DevOps, and GitOps best practices. 
 
-## Description
-NoteFort ensures availability of your notes through a decoupled backend microservices architecture even if individual services experience downtime.  
-
-## Design
+## Application Design
 The application has a React frontend and two Express.js backend services that communicate via RabbitMQ.
 
 <br>
@@ -17,11 +14,12 @@ The application has a React frontend and two Express.js backend services that co
 </div>  
 
 #### Key Concepts
-- API requests are routed and proxied through Nginx proxy server.
+- NodeJS Backend services process input and store your notes in their corresponding databases.
+- NodeJS Backend services produce and consume messages using RabbitMQ.
+- Nginx Proxy Server routes and proxies API requests.
 - RabbitMQ handles the messaging queue for backend microservices.
-- Backend services process input and store it in their corresponding databases.
 
-## Architecture
+## Cloud Architecture
 Click on [this link](./images/architecture.jpeg) to to see the high-resolution version.
 
 <p align="center">
@@ -31,47 +29,45 @@ Click on [this link](./images/architecture.jpeg) to to see the high-resolution v
 </p>
 
 ## Toolset
+- AWS EKS
+- AWS EKS Autoscaler, VPA & HPA
+- Helm Chart
+- ArgoCD
+- HashiCorp Cloud Vault
+- Serverless Framework
+- AWS Lambda
+- AWS API Gateway
+- AWS CloudFormation
+- AUTH0 API's
+- AUTH0 Application's
+- Prometheus
+- Grafana
 - Github Actions
 - Docker
 - Terraform
-- HashiCorp Cloud Vault
-- Kubernetes
-- Helm
-- K8S Autoscaler, VPA & HPA
-- Prometheus & Grafana
-- Skaffold
-- ArgoCD
 
 ## Try it Out: Prerequisites
 
-#### AWS OIDC Provider  
-You have to Setup AWS OIDC Provider and create an IAM role to be used by GitHub Actions to authenticate with AWS, refer to the [AWS OIDC Provider guide](https://aws.amazon.com/blogs/security/use-iam-roles-to-connect-github-actions-to-actions-in-aws) for detailed instructions. You can grant the IAM role used by GitHub Actions the AdministratorAccess IAM Policy, in a production environment adhere to the principle of least privilege.
+#### AWS GITHUB OIDC Provider  
+You have to Setup AWS OIDC Provider and create an IAM role to be used by GitHub Actions to authenticate with AWS, refer to the [AWS OIDC Provider guide](https://aws.amazon.com/blogs/security/use-iam-roles-to-connect-github-actions-to-actions-in-aws) for detailed instructions.  
 
-#### SSH Key Pair 
-To generate and push to AWS the SSH pubic key required to SSH into EKS cluster public EC2 instances, from your system run `generate-ssh-keypair.sh` script:
-   ```bash
-   chmod +x generate-ssh-keypair.sh
-   ./generate-ssh-keypair.sh
-   ```
+You can grant the IAM role used by GitHub Actions the AdministratorAccess IAM Policy, in a production environment adhere to the principle of least privilege.
 
-#### Remote Backend Resources
-To create the S3 bucket and the DynamoDB Table, from your system run `create-backend-resources.sh` script:
-   ```bash
-   chmod +x create-backend-resources.sh
-   ./create-backend-resources.sh
-   ```
-Ensure AWC CLI is configured on your system before running this script.
+#### HashiCorp CLOUD VAULT SECRETS
+In HashiCorp Vault Cloud Secrets, Create a secret MYSQL_PASSWORDcontaining the MySQL database password. 
 
-#### HashiCorp Cloud Vault Secrets
-In HashiCorp Vault Cloud Secrets, Create a secret `MYSQL_PASSWORD`containing the MySQL database password. 
+This secret is securely stored in HCP and later fetched during deployment using Kubernetes Secret to inject the database password into Kubernetes MySQL StatefulSets mysqla and mysqlb and Kubernetes Node.js Deployments nodejsa and nodejsb. 
 
-This secret is securely stored in HCP and later fetched during deployment using Kubernetes Secret to inject the database password into Kubernetes MySQL StatefulSets `mysqla` and `mysqlb` and Kubernetes Node.js Deployments `nodejsa` and `nodejsb`. 
+#### AUTH0 MANAGEMENT CLIENT
+My workflows will create Auth0 clients and servers for AWS API Gateway authorizers. These workflows require access to the Auth0 Management API.  
 
-#### Forking the Repositoy
-Go to notefort repository page on GitHub and Click the "Fork" button at the top right of the page.
+For this to work, in the Auth0 Dashboard you need to (1) create an Auth0 Management Application  and (2) Authorize the Auth0 Management API. Take note of your Client ID, Client Secret, and Auth0 Domain.
 
-#### GitHub Actions Secrets 
-Forking does not copy Github Actions Secrets. Create the following Github Actions Secrets in the newly forked repository:
+#### GITHUB PERSONAL ACCESS TOKEN (PAT)
+My workflows will create GitHub Actions Secrets, this requires a GitHub PAT. You have to create a GitHub fine-grained PAT (GH_PAT_SECRETS) with read-write permissions to the repository Secrets.
+
+#### GITHUB ACTIONS SECRETS
+Create the following Github Actions Secrets:
 
 - **AWS_ACCOUNT_ID**: The 12-digit AWS account number where the resources will be deployed.
 - **AWS_REGION**: The AWS region (e.g., us-east-1) where the infrastructure will be provisioned.
@@ -81,11 +77,37 @@ Forking does not copy Github Actions Secrets. Create the following Github Action
 - **HCP_CLIENT_ID**: The HCP service principal client ID.
 - **HCP_CLIENT_SECRET**: The HCP service principal client secret.
 - **HCP_API_ENDPOINT**: The HCP API Endpoint URL for HashiCorp Cloud Platform (HCP) Vault Secrets.
-
-Additionally, create the following Github Actions Variable:
+- **AUTH0_DOMAIN**: The tenant of your Auth0 account (format: https://your-domain.ca.auth0.com/).
+- **AUTH0_MANAGEMENT_CLIENT_ID**: The Client ID of your Auth0 Management Client that you created in the Prerequisites step.
+- **AUTH0_MANAGEMENT_CLIENT_SECRET**: The Client Secret of your Auth0 Management Client that you created in the Prerequisites step. 
 - **EKS_CLUSTER_NAME**: "notefort-cluster"
+- **GH_PAT_SECRETS**: The PAT that you created in the Prerequisites step.
+
+#### EKS NODES SSH KEY PAIR
+To generate and push to AWS the SSH pubic key required to SSH into EKS cluster public EC2 instances, from your system run generate-ssh-keypair.sh script:
+   ```bash
+   chmod +x generate-ssh-keypair.sh
+   ./generate-ssh-keypair.sh
+   ```
+Ensure you have setup AWS CLI before running this script.
 
 ## Try it Out: Go Live
+
+#### Backend - Create
+This workflow deploys Lambda functions (create_backend_resources & delete_backend_resources), sets up an HTTP API Gateway and integrates it with Auth0 for secure API access.  
+
+The workflow performs the following tasks:
+- The backend service is deployed using the Serverless Framework. At this stage, a dummy Auth0 API identifier/audience is used.
+- An Auth0 API is created (NOTEFORT-API) with the URL of the deployed API Gateway. This is done programmatically using Auth0’s Management API.
+- An M2M Auth0 application (NOTEFORT-APP) is created to interact with the newly deployed API, it is then granted permissions to access the newly created Auth0 API.
+- The Serverless Framework is used to redeploy the backend service, but this time with the actual Auth0 API identifier/audience.
+- Set API Gateway URL, Auth0 Management Client ID and Secret as GitHub Secrets.
+
+The Lambda function create_backend_resources is invoked at the end of the workflow to provision an S3 and a DynamoDB Table required by Terraform.
+
+#### Backend - Delete
+This workflow invokes the Lambda Function delete_backend_resources to delete the S3 and the DynamoDB Table.
+
 #### Artifacts - React
 This workflow performs the following tasks:
 - Create AWS ECR notefort-react registry if it does not already exist.

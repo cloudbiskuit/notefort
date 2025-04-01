@@ -1,0 +1,52 @@
+name: Backend - Delete
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  delete:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend
+
+    env:
+      AUTH0_DOMAIN: ${{ secrets.AUTH0_DOMAIN }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.GH_IAM_ROLE }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Fetch Auth0 Access Token
+        run: |
+          AUTH0_CLIENT_ID=${{ secrets.AUTH0_CLIENT_ID }}
+          AUTH0_CLIENT_SECRET=${{ secrets.AUTH0_CLIENT_SECRET }}
+          API_URL=${{ secrets.API_URL }}
+
+          AUTH0_ACCESS_TOKEN=$(curl --request POST \
+            --url https://$AUTH0_DOMAIN/oauth/token \
+            --header 'Content-Type: application/json' \
+            --data '{"grant_type":"client_credentials","client_id":"'$AUTH0_CLIENT_ID'","client_secret":"'$AUTH0_CLIENT_SECRET'","audience":"'$API_URL'"}')
+          
+          echo "AUTH0_ACCESS_TOKEN=$(echo $AUTH0_ACCESS_TOKEN | jq -r .access_token)" >> $GITHUB_ENV
+
+      - name: Invoke Delete Backend Lambda Function
+        run: |
+          API_URL=${{ secrets.API_URL }}
+          AUTH0_ACCESS_TOKEN=${{ env.AUTH0_ACCESS_TOKEN }}
+
+          curl --request POST \
+              --url "$API_URL/delete-backend" \
+              --header "Authorization: Bearer $AUTH0_ACCESS_TOKEN" \
+              --data '{}'
