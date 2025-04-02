@@ -93,17 +93,24 @@ def delete_backend_resources(event, context):
         bucket_name_response = ssm.get_parameter(Name="notefort-bucket-name")
         bucket_name = bucket_name_response["Parameter"]["Value"]
 
-        print(f"Deleting S3 Bucket: {bucket_name}")
+        # Function to delete all objects, including versions
+        def empty_bucket(bucket_name):
+            paginator = s3.get_paginator("list_object_versions")
+            page_iterator = paginator.paginate(Bucket=bucket_name)
 
-        # Delete all objects from the bucket before deleting it
-        objects = s3.list_objects_v2(Bucket=bucket_name)
-        if "Contents" in objects:
-            s3.delete_objects(
-                Bucket=bucket_name,
-                Delete={
-                    "Objects": [{"Key": obj["Key"]} for obj in objects["Contents"]]
-                }
-            )
+            for page in page_iterator:
+                delete_objects = []
+
+                if "Versions" in page:
+                    delete_objects.extend([{"Key": v["Key"], "VersionId": v["VersionId"]} for v in page["Versions"]])
+
+                if "DeleteMarkers" in page:
+                    delete_objects.extend([{"Key": d["Key"], "VersionId": d["VersionId"]} for d in page["DeleteMarkers"]])
+
+                if delete_objects:
+                    s3.delete_objects(Bucket=bucket_name, Delete={"Objects": delete_objects})
+
+        empty_bucket(bucket_name)
 
         # Delete the S3 bucket
         s3.delete_bucket(Bucket=bucket_name)
