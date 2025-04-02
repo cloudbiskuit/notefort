@@ -77,8 +77,8 @@ jobs:
           export GH_ACCOUNT="${{ secrets.GH_ACCOUNT }}"
 
           envsubst < ./operations/argocd/applications/application.yaml > application-temp.yaml
-          cat 
-
+          cat application-temp.yaml
+          
       - name: Create ArgoCD Application
         run: |
           kubectl apply -f application-temp.yaml -n argocd
