@@ -8,7 +8,7 @@ permissions:
   contents: read
 
 jobs:
-  delete:
+  main:
     runs-on: ubuntu-latest
 
     defaults:
