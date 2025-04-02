@@ -9,31 +9,56 @@ provider:
     AUTH0_API_IDENTIFIER: "https://temp-placeholder.com"   # Set in GitHub Actions Workflow
 
   iamRoleStatements:
+    # Permissions for S3
     - Effect: Allow
       Action:
         - s3:CreateBucket
-        - s3:ListBucket
+        - s3:DeleteBucket
         - s3:PutBucketTagging
         - s3:PutBucketPublicAccessBlock
-        - ssm:PutParameter
-        - dynamodb:CreateTable
+        - s3:ListBucket
+        - s3:ListBucketVersions
+        - s3:GetBucketLocation
+        - s3:DeleteObject
+        - s3:DeleteObjectVersion
+        - s3:GetObject
+        - s3:PutObject
       Resource:
-        - arn:aws:s3:::*
-        - arn:aws:ssm:us-east-1:*:parameter/notefort-bucket-name
-        - arn:aws:dynamodb:us-east-1:*:table/notefort-locks
+        - "arn:aws:s3:::notefort-state-*"
+        - "arn:aws:s3:::notefort-state-*/*"
 
+    # Permissions for DynamoDB
     - Effect: Allow
       Action:
-        - s3:DeleteBucket
-        - s3:ListBucket
-        - s3:DeleteBucketPolicy
-        - ssm:GetParameter
+        - dynamodb:CreateTable
         - dynamodb:DeleteTable
+        - dynamodb:DescribeTable
+        - dynamodb:ListTables
+        - dynamodb:UpdateTable
+        - dynamodb:PutItem
+        - dynamodb:DeleteItem
+        - dynamodb:GetItem
+        - dynamodb:Scan
       Resource:
-        - arn:aws:s3:::*
-        - arn:aws:ssm:us-east-1:*:parameter/notefort-bucket-name
-        - arn:aws:dynamodb:us-east-1:*:table/notefort-locks
+        - "arn:aws:dynamodb:*:*:table/notefort-locks"
 
+    # Permissions for SSM Parameter Store
+    - Effect: Allow
+      Action:
+        - ssm:PutParameter
+        - ssm:GetParameter
+        - ssm:DeleteParameter
+      Resource:
+        - "arn:aws:ssm:*:*:parameter/notefort-bucket-name"
+
+    # General logging permissions (optional but recommended)
+    - Effect: Allow
+      Action:
+        - logs:CreateLogGroup
+        - logs:CreateLogStream
+        - logs:PutLogEvents
+      Resource: "*"
+ 
   httpApi:
     authorizers:
       Auth0Authorizer:
