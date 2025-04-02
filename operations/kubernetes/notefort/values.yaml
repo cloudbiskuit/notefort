@@ -31,7 +31,7 @@ nodejsServices:
     dbName: "mysqla"
     dbUser: "root"
     imageRepo: "notefort-nodejsa"
-    imageTag: ffbf0de
+    imageTag: 8d48fbb
   - name: nodejsb
     port: 5000
     dbHost: "mysqlb"
