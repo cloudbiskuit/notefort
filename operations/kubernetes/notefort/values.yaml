@@ -38,4 +38,4 @@ nodejsServices:
     dbName: "mysqlb"
     dbUser: "root"
     imageRepo: "notefort-nodejsb"
-    imageTag: c960d62
+    imageTag: f5cfea9
