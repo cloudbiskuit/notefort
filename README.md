@@ -91,21 +91,7 @@ To generate and push to AWS the SSH pubic key required to SSH into EKS cluster p
 Ensure you have setup AWS CLI before running this script.
 
 ## Try it Out: Go Live
-
-#### Backend - Create
-This workflow deploys Lambda functions (create_backend_resources & delete_backend_resources), sets up an HTTP API Gateway and integrates it with Auth0 for secure API access.  
-
-The workflow performs the following tasks:
-- The backend service is deployed using the Serverless Framework. At this stage, a dummy Auth0 API identifier/audience is used.
-- An Auth0 API is created (NOTEFORT-API) with the URL of the deployed API Gateway. This is done programmatically using Auth0’s Management API.
-- An M2M Auth0 application (NOTEFORT-APP) is created to interact with the newly deployed API, it is then granted permissions to access the newly created Auth0 API.
-- The Serverless Framework is used to redeploy the backend service, but this time with the actual Auth0 API identifier/audience.
-- Set API Gateway URL, Auth0 Management Client ID and Secret as GitHub Secrets.
-
-The Lambda function create_backend_resources is invoked at the end of the workflow to provision an S3 and a DynamoDB Table required by Terraform.
-
-#### Backend - Delete
-This workflow invokes the Lambda Function delete_backend_resources to delete the S3 and the DynamoDB Table.
+On first setup, execute these workflows in order. The workflows are fully automated and will also run on any changes to the base code in the repository.
 
 #### Artifacts - React
 This workflow performs the following tasks:
@@ -125,8 +111,17 @@ This workflow performs the following tasks:
 - Build, tag (commit hash + latest), and push the image to AWS ECR Registry.
 - Replace the image tag of nodejsb in the values.yaml Kubernetes Helm file with the latest commit hash, and commit the updated file to the GitHub repository.
 
-#### Artifacts - Cleanup
-This workflow deletes the AWS ECR registries belonging to the application.
+#### Backend - Create
+This workflow deploys Lambda functions (create_backend_resources & delete_backend_resources), sets up an HTTP API Gateway and integrates it with Auth0 for secure API access.  
+
+The workflow performs the following tasks:
+- The backend service is deployed using the Serverless Framework. At this stage, a dummy Auth0 API identifier/audience is used.
+- An Auth0 API is created (NOTEFORT-API) with the URL of the deployed API Gateway. This is done programmatically using Auth0’s Management API.
+- An M2M Auth0 application (NOTEFORT-APP) is created to interact with the newly deployed API, it is then granted permissions to access the newly created Auth0 API.
+- The Serverless Framework is used to redeploy the backend service, but this time with the actual Auth0 API identifier/audience.
+- Set API Gateway URL, Auth0 Management Client ID and Secret as GitHub Secrets.
+
+The Lambda function create_backend_resources is invoked at the end of the workflow to provision an S3 and a DynamoDB Table required by Terraform.
 
 #### Infrastructure - Provision
 This workflow performs the following jobs:
@@ -144,6 +139,26 @@ The IAM user defined in the GitHub Actions Variable `AWS_USER` will be mapped to
 
 The necessary IAM permissions for the Cluster Autoscaler to modify EKS node groups have already been accounted for by attaching a managed IAM policy to the IAM role associated with the node groups.
 
+#### Application - Install
+This workflow Creates an ArgoCD Application using NoteFort Helm chart. After the Workflow completes, the `URL` will be provided in the terminal output.
+
+Note: The Helm chart is ready for multiple instances of the application (e.g., development and production).
+
+#### How to Access Prometheus, Grafana and ArgoCD
+Prometheus: Follow the instructions provided in the workflow output to get the username/password, and to port-forward a tunnel to Prometheus. To access Prometheus UI on your system, go to: https://localhost:`port`
+
+Grafana: Follow the instructions provided in the workflow output to get the username/password, and to port-forward a tunnel to Grafana. To access Grafana UI on your system, go to: https://localhost:`port`
+
+ArgoCD: Follow the instructions provided in the workflow output to get the username/password, and to port-forward a tunnel to ArgoCD. To access ArgoCD UI on your system, go to: https://localhost:`port`
+
+#### Application - Decommission
+This workflow performs the following Steps:
+- Delete HPA to prevent it from scaling up Pods.
+- Scale down stateless services.
+- Gracefully stop RabbitMQ service.
+- Prepare MySql statefulsets for for graceful shutdown and scale them down.
+- Delete ArgoCD NoteFort Application.
+
 #### Infrastructure - Destroy
 This workflow destroys the AWS infrastructure and the EKS cluster.
 
@@ -155,30 +170,20 @@ Additionaly, To delete the S3 bucket and the DynamoDB Table, from your system ru
 
 Ensure AWC CLI is configured on your system before running this script.
 
-#### Application - Install
-This workflow Creates an ArgoCD Application using NoteFort Helm chart. After the Workflow completes, the `URL` will be provided in the terminal output.
+#### Backend - Delete
+This workflow invokes the Lambda Function delete_backend_resources to delete the S3 and the DynamoDB Table.
 
-Note: The Helm chart is ready for multiple instances of the application (e.g., development and production).
-
-#### Application - Decommission
-This workflow performs the following Steps:
-- Delete HPA to prevent it from scaling up Pods.
-- Scale down stateless services.
-- Gracefully stop RabbitMQ service.
-- Prepare MySql statefulsets for for graceful shutdown and scale them down.
-- Delete ArgoCD NoteFort Application.
-
-## How to Access Prometheus, Grafana and ArgoCD
-Prometheus: Follow the instructions provided in the workflow output to get the username/password, and to port-forward a tunnel to Prometheus. To access Prometheus UI on your system, go to: https://localhost:`port`
-
-Grafana: Follow the instructions provided in the workflow output to get the username/password, and to port-forward a tunnel to Grafana. To access Grafana UI on your system, go to: https://localhost:`port`
-
-ArgoCD: Follow the instructions provided in the workflow output to get the username/password, and to port-forward a tunnel to ArgoCD. To access ArgoCD UI on your system, go to: https://localhost:`port`
+#### Artifacts - Cleanup
+This workflow deletes the AWS ECR registries belonging to the application.
 
 ## PoC
 Here's a demonstration of Notefort successfully deployed on AWS EKS and running as expected, confirming the end-to-end setup from infrastructure provisioning to application deployment.
 
 <br>
+
+<div align="center">
+  <img src="./images/workflows.png" width="1000">
+</div>  
 
 <div align="center">
   <img src="./images/backend-create.png" width="1000">
@@ -241,11 +246,11 @@ Here's a demonstration of Notefort successfully deployed on AWS EKS and running 
 </div>  
 
 <div align="center">
-  <img src="./images/helm.png" width="1000">
+  <img src="./images/browser.png" width="1000">
 </div>  
 
 <div align="center">
-  <img src="./images/browser.png" width="1000">
+  <img src="./images/helm.png" width="1000">
 </div>  
 
 <div align="center">
@@ -282,6 +287,14 @@ Here's a demonstration of Notefort successfully deployed on AWS EKS and running 
 
 <div align="center">
   <img src="./images/grafana.png" width="1000">
+</div>  
+
+<div align="center">
+  <img src="./images/auth0-api.png" width="1000">
+</div>  
+
+<div align="center">
+  <img src="./images/auth0-apps.png" width="1000">
 </div>  
 
 <div align="center">
