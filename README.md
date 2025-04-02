@@ -151,6 +151,8 @@ Grafana: Follow the instructions provided in the workflow output to get the user
 
 ArgoCD: Follow the instructions provided in the workflow output to get the username/password, and to port-forward a tunnel to ArgoCD. To access ArgoCD UI on your system, go to: https://localhost:`port`
 
+Note: Ensure to update your kubeconfig by running: eksctl utils write-kubeconfig --region your-region --cluster notefort-cluster
+
 #### Application - Decommission
 This workflow performs the following Steps:
 - Delete HPA to prevent it from scaling up Pods.
