@@ -100,20 +100,36 @@ def delete_backend_resources(event, context):
 
             for page in page_iterator:
                 delete_objects = []
-
+                
                 if "Versions" in page:
                     delete_objects.extend([{"Key": v["Key"], "VersionId": v["VersionId"]} for v in page["Versions"]])
-
+                
                 if "DeleteMarkers" in page:
                     delete_objects.extend([{"Key": d["Key"], "VersionId": d["VersionId"]} for d in page["DeleteMarkers"]])
 
                 if delete_objects:
-                    s3.delete_objects(Bucket=bucket_name, Delete={"Objects": delete_objects})
+                    try:
+                        s3.delete_objects(Bucket=bucket_name, Delete={"Objects": delete_objects})
+                    except Exception as e:
+                        print(f"Error deleting objects in S3: {e}")
+                        return False  # Return failure to handle properly
+            return True  # Indicate success
 
-        empty_bucket(bucket_name)
+        # Ensure bucket is emptied before deleting
+        if not empty_bucket(bucket_name):
+            return {"statusCode": 500, "body": "Failed to empty bucket"}
 
-        # Delete the S3 bucket
-        s3.delete_bucket(Bucket=bucket_name)
+        # Retry mechanism for bucket deletion (handles eventual consistency)
+        max_retries = 5
+        for attempt in range(max_retries):
+            try:
+                s3.delete_bucket(Bucket=bucket_name)
+                break  # Success
+            except Exception as e:
+                print(f"Attempt {attempt+1} failed: {e}")
+                time.sleep(2)  # Wait and retry
+        else:
+            return {"statusCode": 500, "body": "Failed to delete S3 bucket"}
 
         print(f"Deleting DynamoDB Table: {dynamodb_table_name}")
 
