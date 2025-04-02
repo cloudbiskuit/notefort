@@ -33,7 +33,7 @@ jobs:
 
       - name: Set up Kubeconfig
         run: |
-          eksctl utils write-kubeconfig --region ${{ secrets.AWS_REGION }} --cluster ${{ secrets.EKS_CLUSTER_NAME }}
+          eksctl utils write-kubeconfig --region ${{ secrets.AWS_REGION }} --cluster ${{ secrets.AWS_EKS_CLUSTER_NAME }}
 
       - name: Delete Horizontal Pod Autoscalers 
         run: |

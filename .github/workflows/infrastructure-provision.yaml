@@ -85,7 +85,7 @@ jobs:
 
       - name: Set up Kubeconfig
         run: |
-          eksctl utils write-kubeconfig --region ${{ secrets.AWS_REGION }} --cluster ${{ secrets.EKS_CLUSTER_NAME }}
+          eksctl utils write-kubeconfig --region ${{ secrets.AWS_REGION }} --cluster ${{ secrets.AWS_EKS_CLUSTER_NAME }}
 
       - name: Add IAM User to Kubernetes ConfigMap
         run: |
@@ -122,7 +122,7 @@ jobs:
 
       - name: Set up Kubeconfig
         run: |
-          eksctl utils write-kubeconfig --region ${{ secrets.AWS_REGION }} --cluster ${{ secrets.EKS_CLUSTER_NAME }}
+          eksctl utils write-kubeconfig --region ${{ secrets.AWS_REGION }} --cluster ${{ secrets.AWS_EKS_CLUSTER_NAME }}
 
       - name: Add Cluster Autoscaler Helm repo & Update Helm Repos
         run: |
@@ -134,7 +134,7 @@ jobs:
         run: |
           helm upgrade --install cluster-autoscaler autoscaler/cluster-autoscaler \
             --namespace kube-system \
-            --set autoDiscovery.clusterName="${{ secrets.EKS_CLUSTER_NAME }}" \
+            --set autoDiscovery.clusterName="${{ secrets.AWS_EKS_CLUSTER_NAME }}" \
             --set awsRegion="${{ secrets.AWS_REGION }}" \
             --set extraArgs.balance-similar-node-groups=true \
             --set extraArgs.scale-down-enabled=true \
@@ -196,7 +196,7 @@ jobs:
 
       - name: Set up Kubeconfig
         run: |
-          eksctl utils write-kubeconfig --region ${{ secrets.AWS_REGION }} --cluster ${{ secrets.EKS_CLUSTER_NAME }}
+          eksctl utils write-kubeconfig --region ${{ secrets.AWS_REGION }} --cluster ${{ secrets.AWS_EKS_CLUSTER_NAME }}
 
       - name: Create Monitoring Namespace (if not exists)
         run: |
@@ -253,7 +253,7 @@ jobs:
 
       - name: Set up Kubeconfig
         run: |
-          eksctl utils write-kubeconfig --region ${{ secrets.AWS_REGION }} --cluster ${{ secrets.EKS_CLUSTER_NAME }}
+          eksctl utils write-kubeconfig --region ${{ secrets.AWS_REGION }} --cluster ${{ secrets.AWS_EKS_CLUSTER_NAME }}
 
       - name: Add Argo Helm Repo & Update Repos
         run: |

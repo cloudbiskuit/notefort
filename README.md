@@ -29,8 +29,7 @@ Click on [this link](./images/architecture.jpeg) to to see the high-resolution v
 </p>
 
 ## Toolset
-- AWS EKS
-- AWS EKS Autoscaler, VPA & HPA
+- AWS EKS, Autoscaler, VPA & HPA
 - Helm Chart
 - ArgoCD
 - HashiCorp Cloud Vault
@@ -38,8 +37,8 @@ Click on [this link](./images/architecture.jpeg) to to see the high-resolution v
 - AWS Lambda
 - AWS API Gateway
 - AWS CloudFormation
-- AUTH0 API's
-- AUTH0 Application's
+- Auth0 API's
+- Auth0 Application's
 - Prometheus
 - Grafana
 - Github Actions
@@ -58,7 +57,7 @@ In HashiCorp Vault Cloud Secrets, Create a secret MYSQL_PASSWORDcontaining the M
 
 This secret is securely stored in HCP and later fetched during deployment using Kubernetes Secret to inject the database password into Kubernetes MySQL StatefulSets mysqla and mysqlb and Kubernetes Node.js Deployments nodejsa and nodejsb. 
 
-#### AUTH0 MANAGEMENT CLIENT
+#### Auth0 MANAGEMENT CLIENT
 My workflows will create Auth0 clients and servers for AWS API Gateway authorizers. These workflows require access to the Auth0 Management API.  
 
 For this to work, in the Auth0 Dashboard you need to (1) create an Auth0 Management Application  and (2) Authorize the Auth0 Management API. Take note of your Client ID, Client Secret, and Auth0 Domain.
@@ -69,19 +68,19 @@ My workflows will create GitHub Actions Secrets, this requires a GitHub PAT. You
 #### GITHUB ACTIONS SECRETS
 Create the following Github Actions Secrets:
 
+- **GH_ACCOUNT**: The name of your GitHub account.
+- **GH_IAM_ROLE**: The name of the IAM role you created in the Prerequisites step.
+- **GH_PAT_SECRETS**: The PAT that you created in the Prerequisites step.
 - **AWS_ACCOUNT_ID**: The 12-digit AWS account number where the resources will be deployed.
 - **AWS_REGION**: The AWS region (e.g., us-east-1) where the infrastructure will be provisioned.
-- **GH_ACCOUNT**: You GitHub account name.
-- **GH_IAM_ROLE**: The name of the IAM role you created in the Prerequisites step.
 - **AWS_USER**: The IAM user to be given administrative priviliges on the EKS cluster, this user will be able to view and manage the new EKS cluster in the AWS Console and from AWS CLI. 
+- **AWS_EKS_CLUSTER_NAME**: "notefort-cluster".
 - **HCP_CLIENT_ID**: The HCP service principal client ID.
 - **HCP_CLIENT_SECRET**: The HCP service principal client secret.
 - **HCP_API_ENDPOINT**: The HCP API Endpoint URL for HashiCorp Cloud Platform (HCP) Vault Secrets.
 - **AUTH0_DOMAIN**: The tenant of your Auth0 account (format: https://your-domain.ca.auth0.com/).
 - **AUTH0_MANAGEMENT_CLIENT_ID**: The Client ID of your Auth0 Management Client that you created in the Prerequisites step.
 - **AUTH0_MANAGEMENT_CLIENT_SECRET**: The Client Secret of your Auth0 Management Client that you created in the Prerequisites step. 
-- **EKS_CLUSTER_NAME**: "notefort-cluster"
-- **GH_PAT_SECRETS**: The PAT that you created in the Prerequisites step.
 
 #### EKS NODES SSH KEY PAIR
 To generate and push to AWS the SSH pubic key required to SSH into EKS cluster public EC2 instances, from your system run generate-ssh-keypair.sh script:

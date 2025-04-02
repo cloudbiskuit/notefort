@@ -54,19 +54,19 @@ jobs:
 
       - name: Fetch API Gateway URL
         run: |
-          API_URL=$(aws apigatewayv2 get-apis --query "Items[?contains(Name, 'backend')].ApiEndpoint" --output text)
+          AUTH0_API_URL=$(aws apigatewayv2 get-apis --query "Items[?contains(Name, 'backend')].ApiEndpoint" --output text)
           
-          echo "API_URL=$API_URL" >> $GITHUB_ENV
-          echo "Fetched API Gateway URL: $API_URL"
+          echo "AUTH0_API_URL=$AUTH0_API_URL" >> $GITHUB_ENV
+          echo "Fetched API Gateway URL: $AUTH0_API_URL"
 
       - name: Set GitHub Secret for API Gateway URL
         run: |
           echo "${{ secrets.GH_PAT_SECRETS }}" | gh auth login --with-token
-          gh secret set API_URL --body "$API_URL"
+          gh secret set AUTH0_API_URL --body "$AUTH0_API_URL"
 
       - name: Update Authorizer Audience with the new API Gateway URL in serverless.yaml
         run: |
-          sed -i "s|https://temp-placeholder.com|$API_URL|g" serverless.yaml
+          sed -i "s|https://temp-placeholder.com|$AUTH0_API_URL|g" serverless.yaml
 
       - name: Create "NOTEFORT-API" AUTH0 API With Fetched API URL
         run: |
@@ -82,7 +82,7 @@ jobs:
             --header "authorization: Bearer $AUTH0_MANAGEMENT_API_TOKEN" \
             --header 'content-type: application/json' \
             --data '{
-              "identifier": "${{ env.API_URL }}",
+              "identifier": "${{ env.AUTH0_API_URL }}",
               "name": "NOTEFORT-API",
               "scopes": [
                 {
@@ -131,7 +131,7 @@ jobs:
             --header 'content-type: application/json' \
             --data "{
               \"client_id\": \"$AUTH0_CLIENT_ID\",
-              \"audience\": \"${API_URL}\",
+              \"audience\": \"${AUTH0_API_URL}\",
               \"scope\": [\"admin:ressources\"]
             }")
   
@@ -156,21 +156,21 @@ jobs:
         run: |
           AUTH0_CLIENT_ID=${{ env.AUTH0_CLIENT_ID }}
           AUTH0_CLIENT_SECRET=${{ env.AUTH0_CLIENT_SECRET }}
-          API_URL=${{ env.API_URL }}
+          AUTH0_API_URL=${{ env.AUTH0_API_URL }}
 
           AUTH0_ACCESS_TOKEN=$(curl --request POST \
             --url https://$AUTH0_DOMAIN/oauth/token \
             --header 'Content-Type: application/json' \
-            --data '{"grant_type":"client_credentials","client_id":"'$AUTH0_CLIENT_ID'","client_secret":"'$AUTH0_CLIENT_SECRET'","audience":"'$API_URL'"}')
+            --data '{"grant_type":"client_credentials","client_id":"'$AUTH0_CLIENT_ID'","client_secret":"'$AUTH0_CLIENT_SECRET'","audience":"'$AUTH0_API_URL'"}')
           
           echo "AUTH0_ACCESS_TOKEN=$(echo $AUTH0_ACCESS_TOKEN | jq -r .access_token)" >> $GITHUB_ENV
 
       - name: Invoke Lambda Function
         run: |
-          API_URL=${{ env.API_URL }}
+          AUTH0_API_URL=${{ env.AUTH0_API_URL }}
           AUTH0_ACCESS_TOKEN=${{ env.AUTH0_ACCESS_TOKEN }}
 
           curl --request POST \
-              --url "$API_URL/create-backend" \
+              --url "$AUTH0_API_URL/create-backend" \
               --header "Authorization: Bearer $AUTH0_ACCESS_TOKEN" \
               --data '{}'
