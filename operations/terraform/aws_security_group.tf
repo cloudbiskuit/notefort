@@ -83,6 +83,14 @@ resource "aws_security_group" "public_eks_worker_sg" {
     cidr_blocks = ["10.0.0.0/16"]
   }
 
+  # argoCD repo server
+  ingress {
+    from_port   = 8081
+    to_port     = 8081
+    protocol    = "tcp"
+    cidr_blocks = ["10.0.0.0/16"]
+  }
+
   ingress {
     from_port = 0
     to_port   = 0
@@ -193,6 +201,14 @@ resource "aws_security_group" "private_eks_worker_sg" {
     to_port     = 9090
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"] # ??
+  }
+
+  # argoCD repo server
+  ingress {
+    from_port   = 8081
+    to_port     = 8081
+    protocol    = "tcp"
+    cidr_blocks = ["10.0.0.0/16"]
   }
 
   ingress {
