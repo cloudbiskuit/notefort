@@ -77,7 +77,6 @@ jobs:
           export GH_ACCOUNT="${{ secrets.GH_ACCOUNT }}"
 
           envsubst < ./operations/argocd/applications/application.yaml > application-temp.yaml
-          cat 
 
       - name: Create ArgoCD Application
         run: |
