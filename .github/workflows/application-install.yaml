@@ -84,7 +84,7 @@ jobs:
 
       - name: Fetch Load Balancer URL
         run: |
-          sleep 50
+          sleep 120
           NGINX_LB_URL=$(kubectl get svc nginx -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null)
           echo "NGINX_LB_URL=$NGINX_LB_URL" >> $GITHUB_ENV
 
