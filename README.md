@@ -38,7 +38,7 @@ Click on [this link](./images/architecture.jpeg) to to see the high-resolution v
 - AWS API Gateway & Authorizer's
 - AWS CloudFormation
 - JWT
-- Auth0 API's
+- Auth0 API's & Scope's
 - Auth0 Application's
 - Prometheus
 - Grafana
