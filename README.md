@@ -35,7 +35,7 @@ Click on [this link](./images/architecture.jpeg) to to see the high-resolution v
 - HashiCorp Cloud Vault
 - Serverless Framework
 - AWS Lambda
-- AWS API Gateway
+- AWS API Gateway & Authorizer's
 - AWS CloudFormation
 - JWT
 - Auth0 API's
