@@ -37,6 +37,7 @@ Click on [this link](./images/architecture.jpeg) to to see the high-resolution v
 - AWS Lambda
 - AWS API Gateway
 - AWS CloudFormation
+- JWT
 - Auth0 API's
 - Auth0 Application's
 - Prometheus
