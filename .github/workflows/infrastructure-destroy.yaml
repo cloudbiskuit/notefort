@@ -52,6 +52,6 @@ jobs:
         run: |
           cd ./operations/terraform
           terraform init
-          terraform destroy -auto-approve -var "aws_region=${{ secrets.AWS_REGION }}"
+          terraform destroy -var-file="terraform.tfvars" -auto-approve
 
           echo "INFRASTRUCTURE DESTROYED SUCCESSFULLY"

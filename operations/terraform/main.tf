@@ -9,7 +9,7 @@ terraform {
 }
 
 provider "aws" {
-  region = var.aws_region
+  region = "us-east-1"
 }
 
 # PUBLIC SUBNET A
@@ -53,7 +53,7 @@ module "public_launch_template" {
   source = "./modules/aws_launch_template"
 
   name_prefix              = "public-launch-template"
-  instance_type            = "t3.medium" # 2 vCPUs, 4GB RAM
+  instance_type            = var.public_instance_type
   image_id                 = "ami-036dcb2b3ea936d25"
   key_name                 = "notefort-kp"
   associate_public_ip_address = true
@@ -69,7 +69,7 @@ module "private_launch_template" {
   source = "./modules/aws_launch_template"
 
   name_prefix              = "private-launch-template"
-  instance_type            = "t3.medium" # 2 vCPUs, 4GB RAM
+  instance_type            = var.private_instance_type
   image_id                 = "ami-036dcb2b3ea936d25"
   key_name                 = "notefort-kp"
   associate_public_ip_address = false
@@ -88,9 +88,9 @@ module "public_eks_node_group" {
   eks_node_role     = aws_iam_role.eks_node_role.arn
   subnet_ids        = [module.public_a.subnet_id, module.public_b.subnet_id]
   launch_template_id = module.public_launch_template.launch_template_id
-  desired_size      = 2
-  max_size          = 3
-  min_size          = 2
+  desired_size        = var.public_desired_size
+  max_size            = var.public_max_size
+  min_size            = var.public_min_size
   labels             = { "public" = "true" }
   tag_name          = "public-eks-node-group"
   depends_on        = [aws_internet_gateway.main]
@@ -104,9 +104,9 @@ module "private_eks_node_group" {
   eks_node_role     = aws_iam_role.eks_node_role.arn
   subnet_ids        = [module.private_a.subnet_id, module.private_b.subnet_id]
   launch_template_id = module.private_launch_template.launch_template_id
-  desired_size      = 2
-  max_size          = 3
-  min_size          = 2
+  desired_size        = var.private_desired_size
+  max_size            = var.private_max_size
+  min_size            = var.private_min_size
   labels             = { "private" = "true" }
   tag_name          = "private-eks-node-group"
   depends_on        = [aws_internet_gateway.main]
